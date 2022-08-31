@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.1.32328.378
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Process", "CMH.Function\CMH.Process.csproj", "{BF983720-FD18-41AA-B458-704421E75C93}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Process", "CMH.Process\CMH.Process.csproj", "{BF983720-FD18-41AA-B458-704421E75C93}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.PriorityHandler", "CMH.PriorityHandler\CMH.PriorityHandler.csproj", "{70ECAE28-3E4B-4365-A3AA-BE279A411B1E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Priority", "CMH.Priority\CMH.Priority.csproj", "{70ECAE28-3E4B-4365-A3AA-BE279A411B1E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMH.Common", "CMH.Common\CMH.Common.csproj", "{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}"
 EndProject
