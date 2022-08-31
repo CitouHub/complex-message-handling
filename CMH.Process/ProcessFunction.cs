@@ -12,7 +12,7 @@ using CMH.Common.Message;
 using CMH.Process.DataSourceMock;
 using CMH.Process;
 using CMH.Infrastructure;
-using CMH.Common.Tool;
+using CMH.Common.Util;
 using CMH.Common.Extenstion;
 
 namespace CMH.Function

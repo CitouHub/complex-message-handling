@@ -4,7 +4,7 @@ using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
-using CMH.Common.Tool;
+using CMH.Common.Util;
 using CMH.PriorityHandler.Infrastructure;
 using CMH.PriorityHandler.Tool;
 
@@ -100,8 +100,8 @@ namespace CMH.PriorityHandler.Service
                                     _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime, 
                                     _config.BackoffPolicy.ProcessChannelFull.TryFactor,
                                     _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
-                                    priority, 
                                     (int)_.ApplicationProperties["Tries"],
+                                    priority,
                                     _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime))));
                         }
                     }

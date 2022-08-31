@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Process", "CMH.Process\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Priority", "CMH.Priority\CMH.Priority.csproj", "{70ECAE28-3E4B-4365-A3AA-BE279A411B1E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMH.Common", "CMH.Common\CMH.Common.csproj", "{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Common", "CMH.Common\CMH.Common.csproj", "{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMH.Test", "CMH.Test\CMH.Test.csproj", "{E83FF411-4C1D-4A45-9DFD-6812A970B79D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96C3D5C0-A57E-419D-9BDD-C1AC4FF92472}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E83FF411-4C1D-4A45-9DFD-6812A970B79D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E83FF411-4C1D-4A45-9DFD-6812A970B79D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E83FF411-4C1D-4A45-9DFD-6812A970B79D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E83FF411-4C1D-4A45-9DFD-6812A970B79D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
