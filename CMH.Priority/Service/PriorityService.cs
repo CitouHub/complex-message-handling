@@ -4,6 +4,7 @@ using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
+using CMH.Common.Repository;
 using CMH.Common.Util;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Util;
@@ -17,6 +18,7 @@ namespace CMH.Priority.Service
         private readonly ServiceBusClient _serviceBusClient;
         private readonly ServiceBusAdministrationClient _serviceBusAdministrationClient;
         private readonly IQueueCache _queueCache;
+        private readonly IMessageStatisticsRepository _messageStatisticsRepository;
 
         private int iterations;
         private short activeTasks;
@@ -26,13 +28,15 @@ namespace CMH.Priority.Service
             ILogger<PriorityService> logger,
             ServiceBusClient serviceBusClient,
             ServiceBusAdministrationClient serviceBusAdministrationClient,
-            IQueueCache queueCache)
+            IQueueCache queueCache,
+            IMessageStatisticsRepository messageStatisticsRepository)
         {
             _logger = logger;
             _config = config;
             _serviceBusClient = serviceBusClient;
             _serviceBusAdministrationClient = serviceBusAdministrationClient;
             _queueCache = queueCache;
+            _messageStatisticsRepository = messageStatisticsRepository;
 
             iterations = 0;
 
@@ -98,7 +102,11 @@ namespace CMH.Priority.Service
                                 var messagesToProcess = new List<ServiceBusReceivedMessage>();
                                 var messagesToReschedule = new List<ServiceBusReceivedMessage>();
                                 dataSourceMessages?.ToList().Split(availableSpots, out messagesToProcess, out messagesToReschedule);
-                                messagesToProcess.ForEach(async _ => await receiver.CompleteMessageAsync(_));
+                                messagesToProcess.ForEach(async _ =>
+                                {
+                                    await receiver.CompleteMessageAsync(_);
+                                    _messageStatisticsRepository.PriorityMessageHandled(_, priority);
+                                });
                                 messagesToReschedule.ForEach(async _ => await receiver.CompleteMessageAsync(_));
                                 _logger.LogInformation($"{messagesToProcess.Count} messages will be forwarded for processing, {messagesToReschedule.Count} messages will be rescheduled");
 
@@ -112,14 +120,17 @@ namespace CMH.Priority.Service
                                 if (messagesToReschedule.Count > 0)
                                 {
                                     var returnSender = _serviceBusClient.CreateSender(queueName);
-                                    messagesToReschedule.ForEach(async _ => await returnSender.RescheduleMessageAsync(_,
-                                        DateTimeOffset.UtcNow.AddSeconds(BackoffCalculator.CalculatePriorityRescheduleSleepTime(
+                                    messagesToReschedule.ForEach(async _ => {
+                                        var rescheduleTime = BackoffCalculator.CalculatePriorityRescheduleSleepTime(
                                             _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime,
                                             _config.BackoffPolicy.ProcessChannelFull.TryFactor,
                                             _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
                                             (int)_.ApplicationProperties["Tries"],
                                             priority,
-                                            _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime))));
+                                            _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
+                                        await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));
+                                        _messageStatisticsRepository.PriorityMessageRescheduled(rescheduleTime);
+                                    });
                                     _logger.LogInformation($"Messages reschduled");
                                 }
                             }

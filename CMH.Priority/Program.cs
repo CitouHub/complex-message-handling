@@ -1,3 +1,4 @@
+using CMH.Common.Repository;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Service;
 using CMH.Priority.Util;
@@ -21,6 +22,8 @@ builder.Services.AddHostedService<MessageSeederService>();
 builder.Services.AddHostedService<PriorityService>();
 builder.Services.AddHostedService<QueueCacheService>();
 
+builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
+builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
 builder.Services.AddSingleton<IQueueCache, QueueCache>();
 builder.Services.AddSingleton<Config>();
 

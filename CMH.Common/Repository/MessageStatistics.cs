@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Azure.Messaging.ServiceBus;
 
 namespace CMH.Common.Repository
 {
     public class MessageStatistics
     {
+        public ServiceBusReceivedMessage? Message { get; set; }
+
+        public DateTimeOffset HandledTime { get; set; }
     }
 }
