@@ -1,6 +1,6 @@
 ﻿#pragma warning disable CS8602 // Dereference of a possibly null reference.
 
-namespace CMH.PriorityHandler.Tool
+namespace CMH.Priority.Util
 {
     public class Config
     {
@@ -25,6 +25,14 @@ namespace CMH.PriorityHandler.Tool
 
         public class PriorityClass
         {
+            public short Tasks
+            {
+                get
+                {
+                    return _configuration.GetValue<short>("Priority:Tasks");
+                }
+            }
+
             public int MessageBatch
             {
                 get

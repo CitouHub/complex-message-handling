@@ -5,10 +5,10 @@ using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
 using CMH.Common.Util;
-using CMH.PriorityHandler.Infrastructure;
-using CMH.PriorityHandler.Tool;
+using CMH.Priority.Infrastructure;
+using CMH.Priority.Util;
 
-namespace CMH.PriorityHandler.Service
+namespace CMH.Priority.Service
 {
     public class PriorityService : BackgroundService
     {
@@ -19,7 +19,7 @@ namespace CMH.PriorityHandler.Service
         private readonly IQueueCache _queueCache;
 
         private int iterations;
-        private Timer? _timer;
+        private short activeTasks;
 
         public PriorityService(
             Config config,
@@ -44,84 +44,125 @@ namespace CMH.PriorityHandler.Service
         {
             await _queueCache.AwaitReadyAsync(cancellationToken);
 
-            if (!cancellationToken.IsCancellationRequested)
+            while(cancellationToken.IsCancellationRequested == false)
             {
-                _timer = new Timer(async _ => await HandleMessages(cancellationToken), null, 0, Timeout.Infinite);
+                if (activeTasks < _config.Priority.Tasks)
+                {
+                    _ = Task.Run(() => HandleMessagesAsync(cancellationToken), cancellationToken);
+                    activeTasks++;
+                }
+                Thread.Sleep(5000);
             }
         }
 
-        private async Task HandleMessages(CancellationToken cancellationToken)
+        private async Task HandleMessagesAsync(CancellationToken cancellationToken)
         {
+            _logger.LogInformation($"New HandleMessagesAsync task started ({activeTasks}/{_config.Priority.Tasks})");
             var queueIndex = 0;
-            var messageBatch = _config.Priority.MessageBatch;
 
-            while (queueIndex < _queueCache.GetQueueList().Count && 
-                cancellationToken.IsCancellationRequested == false)
+            while (cancellationToken.IsCancellationRequested == false &&
+                activeTasks <= _config.Priority.Tasks)
             {
-                var queueName = _queueCache.GetQueueList()[queueIndex];
-                var priority = (short)(short.Parse(Regex.Replace(queueName, "[^0-9.]", "")) / 10);
-                var receiver = _serviceBusClient.CreateReceiver(queueName);
-                
-                var priorityMessages = await receiver.ReceiveMessagesAsync(messageBatch, TimeSpan.FromMilliseconds(1000), cancellationToken);
-
-                if (priorityMessages != null && priorityMessages.Count > 0)
+                try
                 {
-                    queueIndex = 0;
-                    iterations = 0;
-                    foreach (var dataSourceMessages in priorityMessages.GroupBy(_ => new { DataSourceId = (short)_.ApplicationProperties["DataSourceId"] }))
+                    var messageBatch = _config.Priority.MessageBatch;
+
+                    while (cancellationToken.IsCancellationRequested == false &&
+                        queueIndex < _queueCache.GetQueueList().Count)
                     {
-                        var processChannel = _config.Priority.DataSourceProcessChannelMap.ContainsKey(dataSourceMessages?.Key.DataSourceId ?? -1) == true ?
-                             _config.Priority.DataSourceProcessChannelMap[dataSourceMessages?.Key.DataSourceId ?? -1] : _config.Priority.DefaultProcessChannel;
+                        var queueName = _queueCache.GetQueueList()[queueIndex];
+                        _logger.LogInformation($"Fetching {messageBatch} new messages from {queueName}");
 
-                        var sender = _serviceBusClient.CreateSender(processChannel);
-                        var queueProperties = await _serviceBusAdministrationClient.GetQueueRuntimePropertiesAsync(processChannel, cancellationToken);
+                        var priority = (short)(short.Parse(Regex.Replace(queueName, "[^0-9.]", "")) / 10);
+                        var receiver = _serviceBusClient.CreateReceiver(queueName);
+                        var priorityMessages = await receiver.ReceiveMessagesAsync(messageBatch, TimeSpan.FromMilliseconds(100 * messageBatch), cancellationToken);
+                        _logger.LogInformation($"{priorityMessages.Count} messages fetched");
 
-                        var messageCount = (int)queueProperties.Value.TotalMessageCount;
-                        var availibleSpots = _config.BackoffPolicy.ProcessChannelFull.ProcessChannelSize - messageCount;
-                        var prioritySpotReduction = priority * _config.BackoffPolicy.ProcessChannelFull.PriorityStepSize;
-                        var availiblePrioritySpots = availibleSpots - prioritySpotReduction;
-
-                        var messagesToProcess = new List<ServiceBusReceivedMessage>();
-                        var messagesToReschedule = new List<ServiceBusReceivedMessage>();
-                        dataSourceMessages?.ToList().Split(availiblePrioritySpots, out messagesToProcess, out messagesToReschedule);
-
-                        messagesToProcess.ForEach(async _ => await receiver.CompleteMessageAsync(_));
-                        messagesToReschedule.ForEach(async _ => await receiver.CompleteMessageAsync(_));
-
-                        var messages = messagesToProcess.Select(_ => new ServiceBusMessage(_)).ToList();
-                        messages.ForEach(_ => _.ApplicationProperties["Tries"] = 0);
-                        await sender.SendMessagesAsync(messages, cancellationToken);
-
-                        if (messagesToReschedule.Count > 0)
+                        if (cancellationToken.IsCancellationRequested == false && priorityMessages != null && priorityMessages.Count > 0)
                         {
-                            var returnSender = _serviceBusClient.CreateSender(queueName);
-                            messagesToReschedule.ForEach(async _ => await returnSender.RescheduleMessageAsync(_,
-                                DateTimeOffset.UtcNow.AddSeconds(BackoffCalculator.CalculatePriorityRescheduleSleepTime(
-                                    _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime, 
-                                    _config.BackoffPolicy.ProcessChannelFull.TryFactor,
-                                    _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
-                                    (int)_.ApplicationProperties["Tries"],
-                                    priority,
-                                    _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime))));
+                            queueIndex = 0;
+                            iterations = 0;
+                            foreach (var dataSourceMessages in priorityMessages.GroupBy(_ => new { DataSourceId = (short)_.ApplicationProperties["DataSourceId"] }))
+                            {
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    break;
+                                }
+
+                                var processChannelName = GetProcessChannelName(dataSourceMessages?.Key.DataSourceId);
+                                _logger.LogInformation($"Handling messages for {dataSourceMessages?.Key.DataSourceId}, target {processChannelName}");
+
+                                var availableSpots = await GetAvailableProcessChannelSpotsAsync(processChannelName, priority, cancellationToken);
+                                _logger.LogInformation($"{processChannelName} has {availableSpots}");
+
+                                var messagesToProcess = new List<ServiceBusReceivedMessage>();
+                                var messagesToReschedule = new List<ServiceBusReceivedMessage>();
+                                dataSourceMessages?.ToList().Split(availableSpots, out messagesToProcess, out messagesToReschedule);
+                                messagesToProcess.ForEach(async _ => await receiver.CompleteMessageAsync(_));
+                                messagesToReschedule.ForEach(async _ => await receiver.CompleteMessageAsync(_));
+                                _logger.LogInformation($"{messagesToProcess.Count} messages will be forwarded for processing, {messagesToReschedule.Count} messages will be rescheduled");
+
+                                var messages = messagesToProcess.Select(_ => new ServiceBusMessage(_)).ToList();
+                                messages.ForEach(_ => _.ApplicationProperties["Tries"] = 0);
+
+                                var sender = _serviceBusClient.CreateSender(processChannelName);
+                                await sender.SendMessagesAsync(messages, cancellationToken);
+                                _logger.LogInformation($"Messages forwarded");
+
+                                if (messagesToReschedule.Count > 0)
+                                {
+                                    var returnSender = _serviceBusClient.CreateSender(queueName);
+                                    messagesToReschedule.ForEach(async _ => await returnSender.RescheduleMessageAsync(_,
+                                        DateTimeOffset.UtcNow.AddSeconds(BackoffCalculator.CalculatePriorityRescheduleSleepTime(
+                                            _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime,
+                                            _config.BackoffPolicy.ProcessChannelFull.TryFactor,
+                                            _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
+                                            (int)_.ApplicationProperties["Tries"],
+                                            priority,
+                                            _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime))));
+                                    _logger.LogInformation($"Messages reschduled");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"No messages found in {queueName}, move to next queue");
+                            queueIndex++;
                         }
                     }
-                }
-                else
+
+                    iterations++;
+                    var sleepTime = BackoffCalculator.CalculateIterationSleepTime(
+                        _config.BackoffPolicy.EmptyIteration.InitialSleepTime,
+                        _config.BackoffPolicy.EmptyIteration.BackoffFactor,
+                        iterations,
+                        _config.BackoffPolicy.EmptyIteration.MaxSleepTime);
+                    await Task.Delay(sleepTime, cancellationToken);
+                    queueIndex = 0;
+                } 
+                catch (Exception e)
                 {
-                    queueIndex++;
+                    _logger.LogError($"Unexpected exception {e.Message}", e);
                 }
             }
 
-            iterations++;
-            if (_timer != null)
-            {
-                var sleepTime = BackoffCalculator.CalculateIterationSleepTime(
-                    _config.BackoffPolicy.EmptyIteration.InitialSleepTime, 
-                    _config.BackoffPolicy.EmptyIteration.BackoffFactor,
-                    iterations,
-                    _config.BackoffPolicy.EmptyIteration.MaxSleepTime);
-                _timer.Change(sleepTime * 1000, Timeout.Infinite);
-            }
+            activeTasks--;
+            _logger.LogInformation($"HandleMessagesAsync task finished ({activeTasks}/{_config.Priority.Tasks})");
+        }
+
+        private string GetProcessChannelName(short? dataSourceId)
+        {
+            return _config.Priority.DataSourceProcessChannelMap.ContainsKey(dataSourceId ?? -1) == true ?
+                _config.Priority.DataSourceProcessChannelMap[dataSourceId ?? -1] : _config.Priority.DefaultProcessChannel;
+        }
+
+        private async Task<int> GetAvailableProcessChannelSpotsAsync(string processChannelName, short priority, CancellationToken cancellationToken) {
+            var queueProperties = await _serviceBusAdministrationClient.GetQueueRuntimePropertiesAsync(processChannelName, cancellationToken);
+
+            var messageCount = (int)queueProperties.Value.TotalMessageCount;
+            var availibleSpots = _config.BackoffPolicy.ProcessChannelFull.ProcessChannelSize - messageCount;
+            var prioritySpotReduction = priority * _config.BackoffPolicy.ProcessChannelFull.PriorityStepSize;
+            return availibleSpots - prioritySpotReduction;
         }
     }
 }

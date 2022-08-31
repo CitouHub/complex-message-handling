@@ -1,8 +1,8 @@
 ﻿using Azure.Messaging.ServiceBus.Administration;
-using CMH.PriorityHandler.Infrastructure;
-using CMH.PriorityHandler.Tool;
+using CMH.Priority.Infrastructure;
+using CMH.Priority.Util;
 
-namespace CMH.PriorityHandler.Service
+namespace CMH.Priority.Service
 {
     public class QueueCacheService : BackgroundService
     {

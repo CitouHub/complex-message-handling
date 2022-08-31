@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CMH.Common\CMH.Common.csproj" />
+    <ProjectReference Include="..\CMH.Process\CMH.Process.csproj" />
   </ItemGroup>
 
 </Project>

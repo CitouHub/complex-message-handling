@@ -1,6 +1,6 @@
-using CMH.PriorityHandler.Infrastructure;
-using CMH.PriorityHandler.Service;
-using CMH.PriorityHandler.Tool;
+using CMH.Priority.Infrastructure;
+using CMH.Priority.Service;
+using CMH.Priority.Util;
 using Microsoft.Extensions.Azure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +17,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddHostedService<MessageSeederService>();
+builder.Services.AddHostedService<MessageSeederService>();
 builder.Services.AddHostedService<PriorityService>();
 builder.Services.AddHostedService<QueueCacheService>();
 

@@ -1,4 +1,4 @@
-namespace CMH.PriorityHandler
+namespace CMH.Priority
 {
     public class WeatherForecast
     {

@@ -54,6 +54,7 @@ namespace CMH.Test.Util
         [InlineData(0, 0, 0, 0)]
         [InlineData(0, 1, 1, 0)]
         [InlineData(0, 1, 0, 0)]
+        [InlineData(-1, 1, 1, 0)]
         [InlineData(1, 1, 1, 1)]
         [InlineData(2, 3, 4, 162)]
         public void CalculateProcessRescheduleSleepTime(int initialSleepTime, double backoffFactor, int tries, int expectedSleepTime)

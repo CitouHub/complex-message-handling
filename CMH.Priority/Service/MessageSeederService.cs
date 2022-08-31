@@ -1,9 +1,10 @@
 ﻿using Azure.Messaging.ServiceBus;
-using CMH.Common.Message;
-using CMH.PriorityHandler.Infrastructure;
 using Newtonsoft.Json;
 
-namespace CMH.PriorityHandler.Service
+using CMH.Common.Message;
+using CMH.Priority.Infrastructure;
+
+namespace CMH.Priority.Service
 {
     public class MessageSeederService : BackgroundService
     {
@@ -34,7 +35,7 @@ namespace CMH.PriorityHandler.Service
             {
                 var messages = new List<ServiceBusMessage>();
 
-                for(var i = 0; i<150; i++)
+                for(var i = 0; i<500; i++)
                 {
                     var jobMessage = new JobMessage()
                     {

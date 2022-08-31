@@ -1,4 +1,4 @@
-﻿namespace CMH.PriorityHandler.Infrastructure
+﻿namespace CMH.Priority.Infrastructure
 {
     public interface IQueueCache
     {
