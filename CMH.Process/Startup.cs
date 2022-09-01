@@ -9,6 +9,8 @@ using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Process;
 using CMH.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
+using CMH.Common.Repository;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -28,6 +30,8 @@ namespace CMH.Process
                 _.AddServiceBusClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
                 _.AddServiceBusAdministrationClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
             });
+
+            builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
 
             var processChannelDescriptions = configuration.GetSection("ProcessChannels").Get<List<string>>();
 

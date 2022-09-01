@@ -19,6 +19,7 @@ namespace CMH.Priority.Service
         private readonly ServiceBusAdministrationClient _serviceBusAdministrationClient;
         private readonly IQueueCache _queueCache;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
+        private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
 
         private int iterations;
         private short activeTasks;
@@ -29,7 +30,8 @@ namespace CMH.Priority.Service
             ServiceBusClient serviceBusClient,
             ServiceBusAdministrationClient serviceBusAdministrationClient,
             IQueueCache queueCache,
-            IMessageStatisticsRepository messageStatisticsRepository)
+            IMessageStatisticsRepository messageStatisticsRepository,
+            IRuntimeStatisticsRepository runtimeStatisticsRepository)
         {
             _logger = logger;
             _config = config;
@@ -37,6 +39,7 @@ namespace CMH.Priority.Service
             _serviceBusAdministrationClient = serviceBusAdministrationClient;
             _queueCache = queueCache;
             _messageStatisticsRepository = messageStatisticsRepository;
+            _runtimeStatisticsRepository = runtimeStatisticsRepository;
 
             iterations = 0;
 
@@ -79,7 +82,9 @@ namespace CMH.Priority.Service
 
                         var priority = (short)(short.Parse(Regex.Replace(queueName, "[^0-9.]", "")) / 10);
                         var receiver = _serviceBusClient.CreateReceiver(queueName);
+                        var queryTime = DateTimeOffset.UtcNow;
                         var priorityMessages = await receiver.ReceiveMessagesAsync(messageBatch, TimeSpan.FromMilliseconds(100 * messageBatch), cancellationToken);
+                        _runtimeStatisticsRepository.PriorityQueueQueried(priorityMessages.Count, (DateTimeOffset.UtcNow - queryTime).TotalMilliseconds);
                         _logger.LogInformation($"{priorityMessages.Count} messages fetched");
 
                         if (cancellationToken.IsCancellationRequested == false && priorityMessages != null && priorityMessages.Count > 0)
