@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
+using CMH.Data.Model;
 
-namespace CMH.Common.Repository
+namespace CMH.Data.Repository
 {
     public interface IMessageStatisticsRepository
     {

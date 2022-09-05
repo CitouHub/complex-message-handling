@@ -4,8 +4,8 @@ using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
-using CMH.Common.Repository;
 using CMH.Common.Util;
+using CMH.Data.Repository;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Util;
 

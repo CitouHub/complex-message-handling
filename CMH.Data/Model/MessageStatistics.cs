@@ -1,6 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 
-namespace CMH.Common.Repository
+namespace CMH.Data.Model
 {
     public class MessageStatistics
     {

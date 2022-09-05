@@ -10,6 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CMH.Common\CMH.Common.csproj" />
+    <ProjectReference Include="..\CMH.Data\CMH.Data.csproj" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

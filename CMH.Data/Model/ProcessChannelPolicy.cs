@@ -1,6 +1,6 @@
-﻿namespace CMH.Infrastructure
+﻿namespace CMH.Data.Model
 {
-    public class ProcessChannel
+    public class ProcessChannelPolicy
     {
         public string Name { get; set; } = "";
         public short Tries { get; set; }

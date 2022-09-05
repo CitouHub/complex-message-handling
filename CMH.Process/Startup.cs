@@ -1,16 +1,18 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.DependencyInjection;
 
 using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Process;
-using CMH.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
-using CMH.Common.Repository;
+using CMH.Data.Repository;
+using CMH.Data.Model;
+using CMH.Common.Enum;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -32,31 +34,39 @@ namespace CMH.Process
             });
 
             builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
+            builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
 
-            var processChannelDescriptions = configuration.GetSection("ProcessChannels").Get<List<string>>();
+            InitiateProcessChannels(builder, configuration);
+        }
 
-            if(processChannelDescriptions != null && processChannelDescriptions.Any())
+        private static void InitiateProcessChannels(IFunctionsHostBuilder builder, IConfigurationRoot configuration)
+        {
+            var provider = builder.Services.BuildServiceProvider();
+            var processChannelPolicyRepository = provider.GetRequiredService<IProcessChannelPolicyRepository>();
+
+            var processChannelPolicies = configuration.GetSection("ProcessChannelPolicies").Get<List<string>>();
+            if (processChannelPolicies != null && processChannelPolicies.Any())
             {
                 var connectionString = configuration.GetValue<string>("Values:ServiceBusConnection");
                 var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
 
-                foreach(var channel in processChannelDescriptions)
+                foreach (var policy in processChannelPolicies)
                 {
-                    var values = channel.Split(';');
-                    var processChannel = new ProcessChannel()
+                    var values = policy.Split(';');
+                    var processChannelPolicy = new ProcessChannelPolicy()
                     {
-                        Name = values.FirstOrDefault(_ => _.StartsWith("Name")).Split('=')[1],
-                        Tries = short.Parse(values.FirstOrDefault(_ => _.StartsWith("Tries")).Split('=')[1]) ,
+                        Name = Enum.Parse<ProcessChannel>(values.FirstOrDefault(_ => _.StartsWith("Name")).Split('=')[1]).ToString(),
+                        Tries = short.Parse(values.FirstOrDefault(_ => _.StartsWith("Tries")).Split('=')[1]),
                         InitialSleepTime = short.Parse(values.FirstOrDefault(_ => _.StartsWith("InitialSleepTime")).Split('=')[1]),
                         BackoffFactor = double.Parse(values.FirstOrDefault(_ => _.StartsWith("BackoffFactor")).Split('=')[1])
                     };
 
-                    if(serviceBusAdministrationClient.QueueExistsAsync(processChannel.Name).Result == false)
+                    if (serviceBusAdministrationClient.QueueExistsAsync(processChannelPolicy.Name).Result == false)
                     {
-                        serviceBusAdministrationClient.CreateQueueAsync(processChannel.Name).Wait();
+                        serviceBusAdministrationClient.CreateQueueAsync(processChannelPolicy.Name).Wait();
                     }
-                    
-                    Variable.ProcessChannels.Add(processChannel);
+
+                    processChannelPolicyRepository.Add(processChannelPolicy);
                 }
             }
         }

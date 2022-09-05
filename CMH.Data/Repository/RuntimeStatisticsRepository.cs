@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace CMH.Common.Repository
+namespace CMH.Data.Repository
 {
     public interface IRuntimeStatisticsRepository
     {
@@ -16,14 +16,14 @@ namespace CMH.Common.Repository
         public double TotalProcessDuration { get; private set; }
         public long TotalMemoryUsage { get; private set; }
 
-        public decimal AvgMessagesPerQuery
+        public double AvgMessagesPerQuery
         {
-            get { return Math.Round((decimal)(TotalMessagesFetched / PriorityQueueQueries), 2); }
+            get { return Math.Round((double)(TotalMessagesFetched / PriorityQueueQueries), 2); }
         }
 
-        public decimal AvgMessagesFetchDuration
+        public double AvgMessagesFetchDuration
         {
-            get { return Math.Round((decimal)(TotalMessageFetchDuration / TotalMessagesFetched), 2); }
+            get { return Math.Round((double)(TotalMessageFetchDuration / TotalMessagesFetched), 2); }
         }
 
         public void PriorityQueueQueried(int messageFetched, double duration)
