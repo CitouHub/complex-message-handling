@@ -1,4 +1,6 @@
-﻿namespace CMH.Priority.Util
+﻿using CMH.Common.Enum;
+
+namespace CMH.Priority.Util
 {
     public class Config
     {
@@ -10,8 +12,27 @@
 
         public BackoffPolicyClass BackoffPolicy { get; set; } = new();
 
+        public Config() { }
+
+        public Config(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public void Reset()
+        {
+            QueueCache.Reset();
+            Priority.Reset();
+            BackoffPolicy.Reset();
+        }
+
         public class QueueCacheClass
         {
+            public void Reset()
+            {
+                _RefreshInterval = null;
+            }
+
             private int? _RefreshInterval;
             public int RefreshInterval
             {
@@ -28,6 +49,13 @@
 
         public class PriorityClass
         {
+            public void Reset()
+            {
+                _Tasks = null;
+                _MessageBatch = null;
+                _DefaultProcessChannel = null;
+            }
+
             private short? _Tasks;
             public short Tasks
             {
@@ -54,12 +82,12 @@
                 }
             }
 
-            private string? _DefaultProcessChannel;
-            public string DefaultProcessChannel
+            private ProcessChannel? _DefaultProcessChannel;
+            public ProcessChannel DefaultProcessChannel
             {
                 get
                 {
-                    return _DefaultProcessChannel ?? _configuration.GetValue<string>("Priority:DefaultProcessChannel");
+                    return _DefaultProcessChannel ?? Enum.Parse<ProcessChannel>(_configuration.GetValue<string>("Priority:DefaultProcessChannel"));
                 }
                 set
                 {
@@ -74,8 +102,21 @@
 
             public ProcessChannelFullClass ProcessChannelFull { get; set; } = new();
 
+            public void Reset()
+            {
+                EmptyIteration.Reset();
+                ProcessChannelFull.Reset();
+            }
+
             public class EmptyIterationClass
             {
+                public void Reset()
+                {
+                    _InitialSleepTime = null;
+                    _BackoffFactor = null;
+                    _MaxSleepTime = null;
+                }
+
                 private int? _InitialSleepTime;
                 public int InitialSleepTime
                 {
@@ -118,6 +159,16 @@
 
             public class ProcessChannelFullClass
             {
+                public void Reset()
+                {
+                    _MaxSize = null;
+                    _PriorityStepSize = null;
+                    _InitialSleepTime = null;
+                    _PriorityFactor = null;
+                    _TryFactor = null;
+                    _MaxSleepTime = null;
+                }
+
                 private short? _MaxSize;
                 public short MaxSize
                 {
@@ -196,13 +247,6 @@
                     }
                 }
             }
-        }
-
-        public Config() { }
-
-        public Config(IConfiguration configuration)
-        {
-            _configuration = configuration;
         }
     }
 }

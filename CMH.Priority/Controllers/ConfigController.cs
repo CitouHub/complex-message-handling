@@ -41,5 +41,12 @@ namespace CMH.Priority.Controllers
                 }
             }
         }
+
+        [HttpPut]
+        [Route("reset")]
+        public void Reset()
+        {
+            _config.Reset();
+        }
     }
 }
