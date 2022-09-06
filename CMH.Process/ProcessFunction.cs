@@ -20,16 +20,19 @@ namespace CMH.Function
     {
         private readonly ServiceBusClient _serviceBusClient;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
+        private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IDataSourceRepository _dataSourceRepository;
         private readonly IProcessChannelPolicyRepository _processChannelPolicyRepository;
 
         public ProcessFunction(ServiceBusClient serviceBusClient,
             IRuntimeStatisticsRepository runtimeStatisticsRepository,
-            IDataSourceRepository dataSourceRepository,
+            IMessageStatisticsRepository messageStatisticsRepository,
+        IDataSourceRepository dataSourceRepository,
             IProcessChannelPolicyRepository processChannelPolicyRepository)
         {
             _serviceBusClient = serviceBusClient;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
+            _messageStatisticsRepository = messageStatisticsRepository;
             _dataSourceRepository = dataSourceRepository;
             _processChannelPolicyRepository = processChannelPolicyRepository;
         }
@@ -66,7 +69,8 @@ namespace CMH.Function
         {
             var executionStart = DateTimeOffset.UtcNow;
             var success = await HandleJobMessageAsync(message.Body.ToString());
-            await HandleResult(success, functionName.Split('_')[1], message, log);
+            var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
+            await HandleResult(success, processChannel, message, log);
             _runtimeStatisticsRepository.MessageProcessingFinished((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
         }
 
@@ -82,11 +86,11 @@ namespace CMH.Function
             return await dataSource.DoWork();
         }
 
-        private async Task HandleResult(bool success, string processChannelName, ServiceBusReceivedMessage message, ILogger log)
+        private async Task HandleResult(bool success, ProcessChannel processChannel, ServiceBusReceivedMessage message, ILogger log)
         {
             if (!success)
             {
-                var processChannelPolicy = _processChannelPolicyRepository.Get(Enum.Parse<ProcessChannel>(processChannelName));
+                var processChannelPolicy = _processChannelPolicyRepository.Get(processChannel);
                 var tries = (int)message.ApplicationProperties["Tries"];
                 if(tries < processChannelPolicy.Tries)
                 {
@@ -100,11 +104,17 @@ namespace CMH.Function
 
                     var sender = _serviceBusClient.CreateSender(processChannelPolicy.Name);
                     await sender.RescheduleMessageAsync(message, scheduledEnqueueTime);
+                    _messageStatisticsRepository.ProcessMessageRescheduled(processChannel);
                 } 
                 else
                 {
                     log.LogWarning($"Unable to process message {message.MessageId} {message.Body} due to too many tries");
+                    _messageStatisticsRepository.ProcessMessageDiscarded(processChannel);
                 }
+            }
+            else
+            {
+                _messageStatisticsRepository.ProcessMessageHandled(processChannel, message);
             }
         }
     }

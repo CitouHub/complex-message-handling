@@ -23,8 +23,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //builder.Services.AddHostedService<MessageSeederService>();
-//builder.Services.AddHostedService<PriorityService>();
-//builder.Services.AddHostedService<QueueCacheService>();
+builder.Services.AddHostedService<PriorityService>();
+builder.Services.AddHostedService<QueueCacheService>();
 
 builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
 builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();

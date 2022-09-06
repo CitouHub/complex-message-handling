@@ -6,5 +6,6 @@
         public short DataSourceId { get; set; }
         public string? JobName { get; set; }
         public string? Description { get; set; }
+        public DateTimeOffset EnqueueTime { get; set; }
     }
 }

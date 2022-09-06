@@ -1,11 +1,10 @@
-﻿using Azure.Messaging.ServiceBus;
-
-namespace CMH.Data.Model
+﻿namespace CMH.Data.Model
 {
     public class MessageStatistics
     {
-        public ServiceBusReceivedMessage? Message { get; set; }
-
-        public DateTimeOffset HandledTime { get; set; }
+        public int TotalMessagesHandled { get; set; }
+        public int TotalMessagesRescheduled { get; set; }
+        public int TotalMessagesDiscarded { get; set; }
+        public double TotalMessageDuration { get; set; }
     }
 }

@@ -1,92 +1,92 @@
 ﻿using Azure.Messaging.ServiceBus;
+
+using CMH.Common.Enum;
 using CMH.Data.Model;
 
 namespace CMH.Data.Repository
 {
     public interface IMessageStatisticsRepository
     {
-        void PriorityMessageHandled(ServiceBusReceivedMessage message, short priority);
-        void PriorityMessageRescheduled(int rescheduledTime);
-        void ProcessMessageHandled(ServiceBusReceivedMessage message, string processChannel);
-        void ProcessMessageRescheduled(int rescheduledTime);
+        void PriorityMessageHandled(short priority, ServiceBusReceivedMessage message);
+        void PriorityMessageRescheduled(short priority);
+        void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message);
+        void ProcessMessageRescheduled(ProcessChannel processChannel);
+        void ProcessMessageDiscarded(ProcessChannel processChannel);
     }
 
     public class MessageStatisticsRepository : IMessageStatisticsRepository
     {
-        private const int RecentMessagesSize = 1000;
+        public Dictionary<short, MessageStatistics> PriorityMessagesStatistics { get; private set; } = new();
+        public Dictionary<ProcessChannel, MessageStatistics> ProcessMessagesStatistics { get; private set; } = new();
 
-        public Dictionary<short, List<MessageStatistics>> RecentPriorityMessageHandled { get; private set; } = new();
-        public int TotalPriorityMessagesHandled { get; private set; }
-        public int TotalPriorityMessagesRescheduled { get; private set; }
-        public double TotalTimeInPriorityQueue { get; private set; }
-        public double TotalTimeInPriorityQueueRescheduled { get; private set; }
-
-        public Dictionary<string, List<MessageStatistics>> RecentProcessMessagesHandled { get; private set; } = new();
-        public int TotalProcessMessages { get; private set; }
-        public int TotalProcessMessagesRescheduled { get; private set; }
-        public double TotalTimeInProcessChannel { get; private set; }
-        public double TotalTimeInProcessChannelRescheduled { get; private set; }
-
-        public void PriorityMessageHandled(ServiceBusReceivedMessage message, short priority)
+        private void InitiatePriorityMessagesStatistics(short priority)
         {
-            lock (RecentPriorityMessageHandled)
+            if (!PriorityMessagesStatistics.ContainsKey(priority))
             {
-                var handledTime = DateTimeOffset.UtcNow;
-                if (!RecentPriorityMessageHandled.ContainsKey(priority))
-                {
-                    RecentPriorityMessageHandled[priority] = new List<MessageStatistics>();
-                }
-
-                RecentPriorityMessageHandled[priority].Add(new MessageStatistics() { Message = message, HandledTime = handledTime });
-                if (RecentPriorityMessageHandled.Count > RecentMessagesSize)
-                {
-                    var lastMessage = RecentPriorityMessageHandled[priority].LastOrDefault();
-                    if (lastMessage != null)
-                    {
-                        RecentPriorityMessageHandled[priority].Remove(lastMessage);
-                    }
-                }
-
-                TotalPriorityMessagesHandled++;
-                TotalTimeInPriorityQueue += (handledTime - message.EnqueuedTime).TotalMilliseconds;
+                PriorityMessagesStatistics[priority] = new MessageStatistics();
             }
         }
 
-        public void PriorityMessageRescheduled(int rescheduledTime)
+        private void InitiateProcessMessagesStatistics(ProcessChannel processChannel)
         {
-            TotalPriorityMessagesRescheduled++;
-            TotalTimeInPriorityQueueRescheduled += rescheduledTime;
-        }
-
-        public void ProcessMessageHandled(ServiceBusReceivedMessage message, string processChannel)
-        {
-            lock (RecentProcessMessagesHandled)
+            if (!ProcessMessagesStatistics.ContainsKey(processChannel))
             {
-                var handledTime = DateTimeOffset.UtcNow;
-                if (!RecentProcessMessagesHandled.ContainsKey(processChannel))
-                {
-                    RecentProcessMessagesHandled[processChannel] = new List<MessageStatistics>();
-                }
-
-                RecentProcessMessagesHandled[processChannel].Add(new MessageStatistics() { Message = message, HandledTime = handledTime });
-                if (RecentProcessMessagesHandled.Count > RecentMessagesSize)
-                {
-                    var lastMessage = RecentProcessMessagesHandled[processChannel].LastOrDefault();
-                    if (lastMessage != null)
-                    {
-                        RecentProcessMessagesHandled[processChannel].Remove(lastMessage);
-                    }
-                }
-
-                TotalProcessMessages++;
-                TotalTimeInProcessChannel += (handledTime - message.EnqueuedTime).TotalMilliseconds;
+                ProcessMessagesStatistics[processChannel] = new MessageStatistics();
             }
         }
 
-        public void ProcessMessageRescheduled(int rescheduledTime)
+        public void PriorityMessageHandled(short priority, ServiceBusReceivedMessage message)
         {
-            TotalProcessMessagesRescheduled++;
-            TotalTimeInProcessChannelRescheduled += rescheduledTime;
+            lock (PriorityMessagesStatistics)
+            {
+                InitiatePriorityMessagesStatistics(priority);
+
+                PriorityMessagesStatistics[priority].TotalMessagesHandled++;
+                PriorityMessagesStatistics[priority].TotalMessageDuration =
+                    (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
+            }
+        }
+
+        public void PriorityMessageRescheduled(short priority)
+        {
+            lock (PriorityMessagesStatistics)
+            {
+                InitiatePriorityMessagesStatistics(priority);
+
+                PriorityMessagesStatistics[priority].TotalMessagesRescheduled++;
+            }
+        }
+
+        public void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message)
+        {
+            lock (ProcessMessagesStatistics)
+            {
+                InitiateProcessMessagesStatistics(processChannel);
+
+                ProcessMessagesStatistics[processChannel].TotalMessagesHandled++;
+                ProcessMessagesStatistics[processChannel].TotalMessageDuration = 
+                    (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
+            }
+        }
+
+        public void ProcessMessageRescheduled(ProcessChannel processChannel)
+        {
+            lock (ProcessMessagesStatistics)
+            {
+                InitiateProcessMessagesStatistics(processChannel);
+
+                ProcessMessagesStatistics[processChannel].TotalMessagesRescheduled++;
+            }
+        }
+
+        public void ProcessMessageDiscarded(ProcessChannel processChannel)
+        {
+            lock (ProcessMessagesStatistics)
+            {
+                InitiateProcessMessagesStatistics(processChannel);
+
+                ProcessMessagesStatistics[processChannel].TotalMessagesDiscarded++;
+            }
         }
     }
 }

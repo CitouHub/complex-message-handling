@@ -45,8 +45,9 @@ namespace CMH.Priority.Service
                         Description = "This is a seeded test message"
                     };
                     var serviceBusMessage = new ServiceBusMessage(JsonConvert.SerializeObject(jobMessage));
-                    serviceBusMessage.ApplicationProperties["Tries"] = 0;
                     serviceBusMessage.ApplicationProperties["DataSourceId"] = jobMessage.DataSourceId;
+                    serviceBusMessage.ApplicationProperties["Tries"] = 0;
+                    serviceBusMessage.ApplicationProperties["EnqueuedTime"] = DateTimeOffset.UtcNow;
 
                     messages.Add(serviceBusMessage);
                 }

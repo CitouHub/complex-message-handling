@@ -110,19 +110,20 @@ namespace CMH.Priority.Service
                                 var messagesToProcess = new List<ServiceBusReceivedMessage>();
                                 var messagesToReschedule = new List<ServiceBusReceivedMessage>();
                                 dataSourceMessages?.ToList().Split(availableSpots, out messagesToProcess, out messagesToReschedule);
-                                messagesToProcess.ForEach(async _ =>
-                                {
-                                    await receiver.CompleteMessageAsync(_);
-                                    _messageStatisticsRepository.PriorityMessageHandled(_, priority);
-                                });
+                                messagesToProcess.ForEach(async _ => await receiver.CompleteMessageAsync(_));
                                 messagesToReschedule.ForEach(async _ => await receiver.CompleteMessageAsync(_));
                                 _logger.LogInformation($"{messagesToProcess.Count} messages will be forwarded for processing, {messagesToReschedule.Count} messages will be rescheduled");
 
                                 var messages = messagesToProcess.Select(_ => new ServiceBusMessage(_)).ToList();
-                                messages.ForEach(_ => _.ApplicationProperties["Tries"] = 0);
+                                messages.ForEach(_ =>
+                                {
+                                    _.ApplicationProperties["Tries"] = 0;
+                                    _.ApplicationProperties["EnqueuedTime"] = DateTimeOffset.UtcNow;
+                                });
 
                                 var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                                 await sender.SendMessagesAsync(messages, cancellationToken);
+                                messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageHandled(priority, _));
                                 _logger.LogInformation($"Messages forwarded");
 
                                 if (messagesToReschedule.Count > 0)
@@ -137,7 +138,7 @@ namespace CMH.Priority.Service
                                             priority,
                                             _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
                                         await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));
-                                        _messageStatisticsRepository.PriorityMessageRescheduled(rescheduleTime);
+                                        _messageStatisticsRepository.PriorityMessageRescheduled(priority);
                                     });
                                     _logger.LogInformation($"Messages reschduled");
                                 }
