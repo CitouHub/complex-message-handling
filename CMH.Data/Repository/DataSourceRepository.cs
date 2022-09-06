@@ -13,28 +13,28 @@ namespace CMH.Data.Repository
 
     public class DataSourceRepository : IDataSourceRepository
     {
-        private readonly List<DataSource> DataSources = new ();
+        private readonly List<DataSource> _dataSources = new();
 
         public DataSource Add(DataSource dataSource)
         {
-            dataSource.Id ??= DataSources.Max(_ => _.Id) + 1;
-            DataSources.Add(dataSource);
-            return DataSources.Last();
+            dataSource.Id ??= _dataSources.Max(_ => _.Id) + 1;
+            _dataSources.Add(dataSource);
+            return _dataSources.Last();
         }
 
         public DataSource? Get(short id)
         {
-            return DataSources.FirstOrDefault(x => x.Id == id);
+            return _dataSources.FirstOrDefault(x => x.Id == id);
         }
 
         public List<DataSource> GetAll()
         {
-            return DataSources;
+            return _dataSources;
         }
 
         public void Update(short id, DataSource dataSourceUpdate)
         {
-            var dataSource = DataSources.FirstOrDefault(x => x.Id == id);
+            var dataSource = _dataSources.FirstOrDefault(x => x.Id == id);
             if (dataSource != null)
             {
                 dataSource.FailRate = dataSourceUpdate.FailRate;
@@ -46,10 +46,10 @@ namespace CMH.Data.Repository
 
         public void Delete(short id)
         {
-            var dataSource = DataSources.FirstOrDefault(x => x.Id == id);
+            var dataSource = _dataSources.FirstOrDefault(x => x.Id == id);
             if (dataSource != null)
             {
-                DataSources.Remove(dataSource);
+                _dataSources.Remove(dataSource);
             }
         }
     }

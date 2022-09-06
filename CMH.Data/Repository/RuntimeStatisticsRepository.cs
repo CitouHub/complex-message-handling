@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using CMH.Data.Model;
 
 namespace CMH.Data.Repository
 {
@@ -6,39 +7,38 @@ namespace CMH.Data.Repository
     {
         void PriorityQueueQueried(int messageFetched, double duration);
         void MessageProcessingFinished(double duration);
+        RuntimeStatistics GetRuntimeStatistics();
+        void ResetRuntimeStatistics();
     }
 
     public class RuntimeStatisticsRepository : IRuntimeStatisticsRepository
     {
-        public int PriorityQueueQueries { get; private set; }
-        public int TotalMessagesFetched { get; private set; }
-        public double TotalMessageFetchDuration { get; private set; }
-        public double TotalProcessDuration { get; private set; }
-        public long TotalMemoryUsage { get; private set; }
-
-        public double AvgMessagesPerQuery
-        {
-            get { return Math.Round((double)(TotalMessagesFetched / PriorityQueueQueries), 2); }
-        }
-
-        public double AvgMessagesFetchDuration
-        {
-            get { return Math.Round((double)(TotalMessageFetchDuration / TotalMessagesFetched), 2); }
-        }
+        private RuntimeStatistics _runtimeStatistics = new();
 
         public void PriorityQueueQueried(int messageFetched, double duration)
         {
-            PriorityQueueQueries++;
-            TotalMessagesFetched += messageFetched;
-            TotalMessageFetchDuration += duration;
+            _runtimeStatistics.PriorityQueueQueries++;
+            _runtimeStatistics.TotalMessagesFetched += messageFetched;
+            _runtimeStatistics.TotalMessageFetchDuration += duration;
         }
 
         public void MessageProcessingFinished(double duration)
         {
             var currentProc = Process.GetCurrentProcess();
             var memoryUsed = currentProc.PrivateMemorySize64;
-            TotalProcessDuration += duration;
-            TotalMemoryUsage += memoryUsed;
+            _runtimeStatistics.TotalProcessDuration += duration;
+            _runtimeStatistics.TotalMemoryUsage += memoryUsed;
+            _runtimeStatistics.TotalMessagesProcessed++;
+        }
+
+        public RuntimeStatistics GetRuntimeStatistics()
+        {
+            return _runtimeStatistics;
+        }
+
+        public void ResetRuntimeStatistics()
+        {
+            _runtimeStatistics = new();
         }
     }
 }

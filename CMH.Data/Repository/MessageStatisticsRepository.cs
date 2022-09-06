@@ -12,81 +12,105 @@ namespace CMH.Data.Repository
         void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message);
         void ProcessMessageRescheduled(ProcessChannel processChannel);
         void ProcessMessageDiscarded(ProcessChannel processChannel);
+        Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics();
+        Dictionary<ProcessChannel, MessageStatistics> GetProcessMessagesStatistics();
+        void ResetPriorityMessagesStatistics();
+        void ResetProcessMessagesStatistics();
     }
 
     public class MessageStatisticsRepository : IMessageStatisticsRepository
     {
-        public Dictionary<short, MessageStatistics> PriorityMessagesStatistics { get; private set; } = new();
-        public Dictionary<ProcessChannel, MessageStatistics> ProcessMessagesStatistics { get; private set; } = new();
+        private Dictionary<short, MessageStatistics> _priorityMessagesStatistics = new();
+        private Dictionary<ProcessChannel, MessageStatistics> _processMessagesStatistics = new();
 
         private void InitiatePriorityMessagesStatistics(short priority)
         {
-            if (!PriorityMessagesStatistics.ContainsKey(priority))
+            if (!_priorityMessagesStatistics.ContainsKey(priority))
             {
-                PriorityMessagesStatistics[priority] = new MessageStatistics();
+                _priorityMessagesStatistics[priority] = new MessageStatistics();
             }
         }
 
         private void InitiateProcessMessagesStatistics(ProcessChannel processChannel)
         {
-            if (!ProcessMessagesStatistics.ContainsKey(processChannel))
+            if (!_processMessagesStatistics.ContainsKey(processChannel))
             {
-                ProcessMessagesStatistics[processChannel] = new MessageStatistics();
+                _processMessagesStatistics[processChannel] = new MessageStatistics();
             }
         }
 
         public void PriorityMessageHandled(short priority, ServiceBusReceivedMessage message)
         {
-            lock (PriorityMessagesStatistics)
+            lock (_priorityMessagesStatistics)
             {
                 InitiatePriorityMessagesStatistics(priority);
 
-                PriorityMessagesStatistics[priority].TotalMessagesHandled++;
-                PriorityMessagesStatistics[priority].TotalMessageDuration =
+                _priorityMessagesStatistics[priority].TotalMessagesHandled++;
+                _priorityMessagesStatistics[priority].TotalMessageDuration =
                     (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
             }
         }
 
         public void PriorityMessageRescheduled(short priority)
         {
-            lock (PriorityMessagesStatistics)
+            lock (_priorityMessagesStatistics)
             {
                 InitiatePriorityMessagesStatistics(priority);
 
-                PriorityMessagesStatistics[priority].TotalMessagesRescheduled++;
+                _priorityMessagesStatistics[priority].TotalMessagesRescheduled++;
             }
         }
 
         public void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message)
         {
-            lock (ProcessMessagesStatistics)
+            lock (_processMessagesStatistics)
             {
                 InitiateProcessMessagesStatistics(processChannel);
 
-                ProcessMessagesStatistics[processChannel].TotalMessagesHandled++;
-                ProcessMessagesStatistics[processChannel].TotalMessageDuration = 
+                _processMessagesStatistics[processChannel].TotalMessagesHandled++;
+                _processMessagesStatistics[processChannel].TotalMessageDuration = 
                     (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
             }
         }
 
         public void ProcessMessageRescheduled(ProcessChannel processChannel)
         {
-            lock (ProcessMessagesStatistics)
+            lock (_processMessagesStatistics)
             {
                 InitiateProcessMessagesStatistics(processChannel);
 
-                ProcessMessagesStatistics[processChannel].TotalMessagesRescheduled++;
+                _processMessagesStatistics[processChannel].TotalMessagesRescheduled++;
             }
         }
 
         public void ProcessMessageDiscarded(ProcessChannel processChannel)
         {
-            lock (ProcessMessagesStatistics)
+            lock (_processMessagesStatistics)
             {
                 InitiateProcessMessagesStatistics(processChannel);
 
-                ProcessMessagesStatistics[processChannel].TotalMessagesDiscarded++;
+                _processMessagesStatistics[processChannel].TotalMessagesDiscarded++;
             }
+        }
+
+        public Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics()
+        {
+            return _priorityMessagesStatistics;
+        }
+
+        public Dictionary<ProcessChannel, MessageStatistics> GetProcessMessagesStatistics()
+        {
+            return _processMessagesStatistics;
+        }
+
+        public void ResetPriorityMessagesStatistics()
+        {
+            _priorityMessagesStatistics = new();
+        }
+
+        public void ResetProcessMessagesStatistics()
+        {
+            _processMessagesStatistics = new();
         }
     }
 }

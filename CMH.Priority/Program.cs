@@ -9,6 +9,7 @@ using CMH.Priority.Util;
 using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Enum;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,7 +53,7 @@ InitiateDataSources(app, builder.Configuration);
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
 }
 
 app.UseCors(builder => builder

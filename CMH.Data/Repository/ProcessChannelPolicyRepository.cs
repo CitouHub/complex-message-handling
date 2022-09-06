@@ -13,27 +13,27 @@ namespace CMH.Data.Repository
 
     public class ProcessChannelPolicyRepository : IProcessChannelPolicyRepository
     {
-        private readonly List<ProcessChannelPolicy> ProcessChannelPolicies = new();
+        private readonly List<ProcessChannelPolicy> _processChannelPolicies = new();
 
         public ProcessChannelPolicy Add(ProcessChannelPolicy processChannelPolicy)
         {
-            ProcessChannelPolicies.Add(processChannelPolicy);
-            return ProcessChannelPolicies.Last();
+            _processChannelPolicies.Add(processChannelPolicy);
+            return _processChannelPolicies.Last();
         }
 
         public ProcessChannelPolicy Get(ProcessChannel processChannel)
         {
-            return ProcessChannelPolicies.First(x => x.Name == processChannel.ToString());
+            return _processChannelPolicies.First(x => x.Name == processChannel.ToString());
         }
 
         public List<ProcessChannelPolicy> GetAll()
         {
-            return ProcessChannelPolicies;
+            return _processChannelPolicies;
         }
 
         public void Update(ProcessChannel processChannel, ProcessChannelPolicy processChannelPolicyUpdate)
         {
-            var processChannelPolicy = ProcessChannelPolicies.FirstOrDefault(x => x.Name == processChannel.ToString());
+            var processChannelPolicy = _processChannelPolicies.FirstOrDefault(x => x.Name == processChannel.ToString());
             if (processChannelPolicy != null)
             {
                 processChannelPolicy.Tries = processChannelPolicyUpdate.Tries;
