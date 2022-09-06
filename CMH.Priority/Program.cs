@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Text.Json.Serialization;
+
 using Microsoft.Extensions.Azure;
 
 using CMH.Priority.Infrastructure;
@@ -6,7 +9,6 @@ using CMH.Priority.Util;
 using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Enum;
-using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +19,16 @@ builder.Services.AddAzureClients(_ =>
     _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
 });
 
-builder.Services.AddControllers();
+builder.Services.AddMvc().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -29,6 +40,7 @@ builder.Services.AddHostedService<QueueCacheService>();
 builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
 builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
 builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
+builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
 builder.Services.AddSingleton<IQueueCache, QueueCache>();
 builder.Services.AddSingleton<Config>();
 
@@ -42,6 +54,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
 
 app.UseHttpsRedirection();
 

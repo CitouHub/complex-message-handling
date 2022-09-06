@@ -7,8 +7,8 @@ namespace CMH.Data.Repository
         DataSource Add(DataSource dataSource);
         List<DataSource> GetAll();
         DataSource? Get(short id);
-        void Update(short Id, DataSource dataSourceUpdate);
-        void Delete(short Id);
+        void Update(short id, DataSource dataSourceUpdate);
+        void Delete(short id);
     }
 
     public class DataSourceRepository : IDataSourceRepository
@@ -22,15 +22,6 @@ namespace CMH.Data.Repository
             return DataSources.Last();
         }
 
-        public void Delete(short Id)
-        {
-            var dataSource = DataSources.FirstOrDefault(x => x.Id == Id);
-            if (dataSource != null)
-            {
-                DataSources.Remove(dataSource);
-            }
-        }
-
         public DataSource? Get(short id)
         {
             return DataSources.FirstOrDefault(x => x.Id == id);
@@ -41,15 +32,24 @@ namespace CMH.Data.Repository
             return DataSources;
         }
 
-        public void Update(short Id, DataSource dataSourceUpdate)
+        public void Update(short id, DataSource dataSourceUpdate)
         {
-            var dataSource = DataSources.FirstOrDefault(x => x.Id == Id);
+            var dataSource = DataSources.FirstOrDefault(x => x.Id == id);
             if (dataSource != null)
             {
                 dataSource.FailRate = dataSourceUpdate.FailRate;
                 dataSource.MinProcessTime = dataSourceUpdate.MinProcessTime;
                 dataSource.MaxProcessTime = dataSourceUpdate.MaxProcessTime;
                 dataSource.ProcessChannel = dataSourceUpdate.ProcessChannel;
+            }
+        }
+
+        public void Delete(short id)
+        {
+            var dataSource = DataSources.FirstOrDefault(x => x.Id == id);
+            if (dataSource != null)
+            {
+                DataSources.Remove(dataSource);
             }
         }
     }

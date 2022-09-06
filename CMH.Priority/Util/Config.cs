@@ -59,7 +59,7 @@
             {
                 get
                 {
-                    return _DefaultProcessChannel ?? _configuration.GetValue<string>("Priority:ProcessChannel_Default");
+                    return _DefaultProcessChannel ?? _configuration.GetValue<string>("Priority:DefaultProcessChannel");
                 }
                 set
                 {
@@ -197,6 +197,8 @@
                 }
             }
         }
+
+        public Config() { }
 
         public Config(IConfiguration configuration)
         {
