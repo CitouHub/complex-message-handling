@@ -18,6 +18,11 @@ namespace CMH.Data.Repository
 
         public DataSource Add(DataSource dataSource)
         {
+            dataSource.Id = dataSource.Id ?? DataSources.Max(_ => _.Id) + 1;
+            if(DataSources.Any(_ => _.Id == dataSource.Id))
+            {
+                throw new Exception("DataSource already exists");
+            }
             DataSources.Add(dataSource);
             return DataSources.Last();
         }

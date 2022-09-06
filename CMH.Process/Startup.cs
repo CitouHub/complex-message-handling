@@ -13,6 +13,7 @@ using CMH.Process;
 using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Enum;
+using System.Globalization;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -55,15 +56,16 @@ namespace CMH.Process
                     var values = policy.Split(';');
                     var processChannelPolicy = new ProcessChannelPolicy()
                     {
-                        Name = Enum.Parse<ProcessChannel>(values.FirstOrDefault(_ => _.StartsWith("Name")).Split('=')[1]).ToString(),
-                        Tries = short.Parse(values.FirstOrDefault(_ => _.StartsWith("Tries")).Split('=')[1]),
-                        InitialSleepTime = short.Parse(values.FirstOrDefault(_ => _.StartsWith("InitialSleepTime")).Split('=')[1]),
-                        BackoffFactor = double.Parse(values.FirstOrDefault(_ => _.StartsWith("BackoffFactor")).Split('=')[1])
+                        Name = Enum.Parse<ProcessChannel>(values.FirstOrDefault(_ => _.StartsWith("Name=")).Split('=')[1]).ToString(),
+                        Tries = short.Parse(values.FirstOrDefault(_ => _.StartsWith("Tries=")).Split('=')[1]),
+                        InitialSleepTime = short.Parse(values.FirstOrDefault(_ => _.StartsWith("InitialSleepTime=")).Split('=')[1]),
+                        BackoffFactor = double.Parse(values.FirstOrDefault(_ => _.StartsWith("BackoffFactor=")).Split('=')[1], CultureInfo.InvariantCulture)
                     };
 
-                    if (serviceBusAdministrationClient.QueueExistsAsync(processChannelPolicy.Name).Result == false)
+                    var processChannelQueueName = $"ProcessChannel_{processChannelPolicy.Name}";
+                    if (serviceBusAdministrationClient.QueueExistsAsync(processChannelQueueName).Result == false)
                     {
-                        serviceBusAdministrationClient.CreateQueueAsync(processChannelPolicy.Name).Wait();
+                        serviceBusAdministrationClient.CreateQueueAsync(processChannelQueueName).Wait();
                     }
 
                     processChannelPolicyRepository.Add(processChannelPolicy);
