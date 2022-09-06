@@ -1,5 +1,4 @@
-﻿using CMH.Common.Enum;
-using CMH.Data.Model;
+﻿using CMH.Data.Model;
 
 namespace CMH.Data.Repository
 {
@@ -18,11 +17,7 @@ namespace CMH.Data.Repository
 
         public DataSource Add(DataSource dataSource)
         {
-            dataSource.Id = dataSource.Id ?? DataSources.Max(_ => _.Id) + 1;
-            if(DataSources.Any(_ => _.Id == dataSource.Id))
-            {
-                throw new Exception("DataSource already exists");
-            }
+            dataSource.Id ??= DataSources.Max(_ => _.Id) + 1;
             DataSources.Add(dataSource);
             return DataSources.Last();
         }

@@ -1,6 +1,4 @@
-﻿#pragma warning disable CS8602 // Dereference of a possibly null reference.
-
-namespace CMH.Priority.Util
+﻿namespace CMH.Priority.Util
 {
     public class Config
     {
@@ -14,47 +12,58 @@ namespace CMH.Priority.Util
 
         public class QueueCacheClass
         {
+            private int? _RefreshInterval;
             public int RefreshInterval
             {
                 get
                 {
-                    return _configuration.GetValue<int>("QueueCache:RefreshInterval");
+                    return _RefreshInterval ?? _configuration.GetValue<int>("QueueCache:RefreshInterval");
+                }
+                set
+                {
+                    _RefreshInterval = value;
                 }
             }
         }
 
         public class PriorityClass
         {
+            private short? _Tasks;
             public short Tasks
             {
                 get
                 {
-                    return _configuration.GetValue<short>("Priority:Tasks");
+                    return _Tasks ?? _configuration.GetValue<short>("Priority:Tasks");
+                }
+                set
+                {
+                    _Tasks = value;
                 }
             }
 
-            public int MessageBatch
+            private short? _MessageBatch;
+            public short MessageBatch
             {
                 get
                 {
-                    return _configuration.GetValue<int>("Priority:MessageBatch");
+                    return _MessageBatch ?? _configuration.GetValue<short>("Priority:MessageBatch");
+                }
+                set
+                {
+                    _MessageBatch = value;
                 }
             }
 
+            private string? _DefaultProcessChannel;
             public string DefaultProcessChannel
             {
                 get
                 {
-                    return _configuration.GetValue<string>("Priority:ProcessChannel_Default");
+                    return _DefaultProcessChannel ?? _configuration.GetValue<string>("Priority:ProcessChannel_Default");
                 }
-            }
-
-            public Dictionary<short, string> DataSourceProcessChannelMap
-            {
-                get
+                set
                 {
-                    return _configuration.GetSection("Priority:DataSourceProcessChannelMap")
-                        .GetChildren().ToDictionary(x => short.Parse(x.Key), x => x.Value);
+                    _DefaultProcessChannel = value;
                 }
             }
         }
@@ -67,78 +76,123 @@ namespace CMH.Priority.Util
 
             public class EmptyIterationClass
             {
+                private int? _InitialSleepTime;
                 public int InitialSleepTime
                 {
                     get
                     {
-                        return _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:InitialSleepTime");
+                        return _InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:InitialSleepTime");
+                    }
+                    set
+                    {
+                        _InitialSleepTime = value;
                     }
                 }
 
+                private double? _BackoffFactor;
                 public double BackoffFactor
                 {
                     get
                     {
-                        return _configuration.GetValue<double>("BackoffPolicy:EmptyIteration:BackoffFactor");
+                        return _BackoffFactor ?? _configuration.GetValue<double>("BackoffPolicy:EmptyIteration:BackoffFactor");
+                    }
+                    set
+                    {
+                        _BackoffFactor = value;
                     }
                 }
 
+                private int? _MaxSleepTime;
                 public int MaxSleepTime
                 {
                     get
                     {
-                        return _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:MaxSleepTime");
+                        return _MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:MaxSleepTime");
+                    }
+                    set
+                    {
+                        _MaxSleepTime = value;
                     }
                 }
             }
 
             public class ProcessChannelFullClass
             {
-                public short ProcessChannelSize
+                private short? _MaxSize;
+                public short MaxSize
                 {
                     get
                     {
-                        return _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:ProcessChannelSize");
+                        return _MaxSize ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:MaxSize");
+                    }
+                    set
+                    {
+                        _MaxSize = value;
                     }
                 }
 
+                private short? _PriorityStepSize;
                 public short PriorityStepSize
                 {
                     get
                     {
-                        return _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PriorityStepSize");
+                        return _PriorityStepSize ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PriorityStepSize");
+                    }
+                    set
+                    {
+                        _PriorityStepSize = value;
                     }
                 }
 
+                private int? _InitialSleepTime;
                 public int InitialSleepTime
                 {
                     get
                     {
-                        return _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:InitialSleepTime");
+                        return _InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:InitialSleepTime");
+                    }
+                    set
+                    {
+                        _InitialSleepTime = value;
                     }
                 }
 
+                private double? _PriorityFactor;
                 public double PriorityFactor
                 {
                     get
                     {
-                        return _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:PriorityFactor");
+                        return _PriorityFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:PriorityFactor");
+                    }
+                    set
+                    {
+                        _PriorityFactor = value;
                     }
                 }
 
+                private double? _TryFactor;
                 public double TryFactor
                 {
                     get
                     {
-                        return _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:TryFactor");
+                        return _TryFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:TryFactor");
+                    }
+                    set
+                    {
+                        _TryFactor = value;
                     }
                 }
 
+                private int? _MaxSleepTime;
                 public int MaxSleepTime
                 {
                     get
                     {
-                        return _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:MaxSleepTime");
+                        return _MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:MaxSleepTime");
+                    }
+                    set
+                    {
+                        _MaxSleepTime = value;
                     }
                 }
             }

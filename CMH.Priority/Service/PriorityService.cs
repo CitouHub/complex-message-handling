@@ -20,6 +20,7 @@ namespace CMH.Priority.Service
         private readonly IQueueCache _queueCache;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
+        private readonly IDataSourceRepository _dataSourceRepository;
 
         private int iterations;
         private short activeTasks;
@@ -31,7 +32,8 @@ namespace CMH.Priority.Service
             ServiceBusAdministrationClient serviceBusAdministrationClient,
             IQueueCache queueCache,
             IMessageStatisticsRepository messageStatisticsRepository,
-            IRuntimeStatisticsRepository runtimeStatisticsRepository)
+            IRuntimeStatisticsRepository runtimeStatisticsRepository,
+            IDataSourceRepository dataSourceRepository)
         {
             _logger = logger;
             _config = config;
@@ -40,6 +42,7 @@ namespace CMH.Priority.Service
             _queueCache = queueCache;
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
+            _dataSourceRepository = dataSourceRepository;
 
             iterations = 0;
 
@@ -98,11 +101,11 @@ namespace CMH.Priority.Service
                                     break;
                                 }
 
-                                var processChannelName = GetProcessChannelName(dataSourceMessages?.Key.DataSourceId);
-                                _logger.LogInformation($"Handling messages for {dataSourceMessages?.Key.DataSourceId}, target {processChannelName}");
+                                var processChannelQueueName = $"ProcessChannel_{_dataSourceRepository.Get(dataSourceMessages?.Key.DataSourceId ?? -1)?.ProcessChannel}";
+                                _logger.LogInformation($"Handling messages for {dataSourceMessages?.Key.DataSourceId}, target {processChannelQueueName}");
 
-                                var availableSpots = await GetAvailableProcessChannelSpotsAsync(processChannelName, priority, cancellationToken);
-                                _logger.LogInformation($"{processChannelName} has {availableSpots}");
+                                var availableSpots = await GetAvailableProcessChannelSpotsAsync(processChannelQueueName, priority, cancellationToken);
+                                _logger.LogInformation($"{processChannelQueueName} has {availableSpots}");
 
                                 var messagesToProcess = new List<ServiceBusReceivedMessage>();
                                 var messagesToReschedule = new List<ServiceBusReceivedMessage>();
@@ -118,7 +121,7 @@ namespace CMH.Priority.Service
                                 var messages = messagesToProcess.Select(_ => new ServiceBusMessage(_)).ToList();
                                 messages.ForEach(_ => _.ApplicationProperties["Tries"] = 0);
 
-                                var sender = _serviceBusClient.CreateSender(processChannelName);
+                                var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                                 await sender.SendMessagesAsync(messages, cancellationToken);
                                 _logger.LogInformation($"Messages forwarded");
 
@@ -166,17 +169,11 @@ namespace CMH.Priority.Service
             _logger.LogInformation($"HandleMessagesAsync task finished ({activeTasks}/{_config.Priority.Tasks})");
         }
 
-        private string GetProcessChannelName(short? dataSourceId)
-        {
-            return _config.Priority.DataSourceProcessChannelMap.ContainsKey(dataSourceId ?? -1) == true ?
-                _config.Priority.DataSourceProcessChannelMap[dataSourceId ?? -1] : _config.Priority.DefaultProcessChannel;
-        }
-
         private async Task<int> GetAvailableProcessChannelSpotsAsync(string processChannelName, short priority, CancellationToken cancellationToken) {
             var queueProperties = await _serviceBusAdministrationClient.GetQueueRuntimePropertiesAsync(processChannelName, cancellationToken);
 
             var messageCount = (int)queueProperties.Value.TotalMessageCount;
-            var availibleSpots = _config.BackoffPolicy.ProcessChannelFull.ProcessChannelSize - messageCount;
+            var availibleSpots = _config.BackoffPolicy.ProcessChannelFull.MaxSize - messageCount;
             var prioritySpotReduction = priority * _config.BackoffPolicy.ProcessChannelFull.PriorityStepSize;
             return availibleSpots - prioritySpotReduction;
         }
