@@ -4,10 +4,10 @@ using CMH.Common.Enum;
 using CMH.Data.Model;
 using CMH.Data.Repository;
 
-namespace CMH.Priority.Controllers
+namespace CMH.Priority.Controller
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("v1/[controller]")]
     public class StatisticsController : ControllerBase
     {
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;

@@ -25,8 +25,11 @@
             lock(_lock)
             {
                 _queueList = queueList.OrderBy(_ => _).ToList();
+                if(_waiting > 0)
+                {
+                    _readySignal.Release(_waiting);
+                }
             }
-            _readySignal.Release(_waiting);
         }
 
         public List<string> GetQueueList()

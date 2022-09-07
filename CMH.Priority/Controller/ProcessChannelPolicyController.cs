@@ -3,10 +3,10 @@ using CMH.Data.Model;
 using CMH.Data.Repository;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CMH.Priority.Controllers
+namespace CMH.Priority.Controller
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("v1/[controller]")]
     public class ProcessChannelPolicyController : ControllerBase
     {
         private readonly IProcessChannelPolicyRepository _processChannelPolicyRepository;

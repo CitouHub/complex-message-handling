@@ -35,7 +35,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 //builder.Services.AddHostedService<MessageSeederService>();
-builder.Services.AddHostedService<PriorityService>();
+//builder.Services.AddHostedService<PriorityService>();
 builder.Services.AddHostedService<QueueCacheService>();
 
 builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
@@ -82,7 +82,7 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
             var values = dataSourceDefault.Split(';');
             var dataSource = new DataSource()
             {
-                Id = int.Parse(values.First(_ => _.StartsWith("Id=")).Split('=')[1] ?? "0"),
+                Id = short.Parse(values.First(_ => _.StartsWith("Id=")).Split('=')[1] ?? "0"),
                 FailRate = double.Parse(values.First(_ => _.StartsWith("FailRate=")).Split('=')[1] ?? "0.0", CultureInfo.InvariantCulture),
                 MinProcessTime = int.Parse(values.First(_ => _.StartsWith("MinProcessTime=")).Split('=')[1] ?? "0"),
                 MaxProcessTime = int.Parse(values.First(_ => _.StartsWith("MaxProcessTime=")).Split('=')[1] ?? "0"),

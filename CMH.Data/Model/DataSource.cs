@@ -4,7 +4,7 @@ namespace CMH.Data.Model
 {
     public class DataSource
     {
-        public int? Id { get; set; }
+        public short? Id { get; set; }
 
         public double FailRate { get; set; }
 
@@ -13,5 +13,9 @@ namespace CMH.Data.Model
         public int MaxProcessTime { get; set; }    
         
         public ProcessChannel ProcessChannel { get; set; }
+
+        public string Description { 
+            get { return $"{Id}, Fail: {FailRate * 100} %, Avg. time: {(MaxProcessTime - MinProcessTime) / 2 + MinProcessTime} ms, PC: {ProcessChannel}"; }
+        }
     }
 }

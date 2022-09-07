@@ -17,7 +17,7 @@ namespace CMH.Data.Repository
 
         public DataSource Add(DataSource dataSource)
         {
-            dataSource.Id ??= _dataSources.Max(_ => _.Id) + 1;
+            dataSource.Id ??= (short?)(_dataSources.Max(_ => _.Id) + 1);
             _dataSources.Add(dataSource);
             return _dataSources.Last();
         }
