@@ -123,7 +123,8 @@ namespace CMH.Priority.Service
 
                                 var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                                 await sender.SendMessagesAsync(messages, cancellationToken);
-                                messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageHandled(priority, _));
+                                messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageCompleted(priority, 
+                                    (DateTimeOffset.UtcNow - (DateTimeOffset)_.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds));
                                 _logger.LogInformation($"Messages forwarded");
 
                                 if (messagesToReschedule.Count > 0)

@@ -1,4 +1,4 @@
-﻿using CMH.Common.Enum;
+﻿using CMH.Common.Variable;
 using CMH.Data.Model;
 
 namespace CMH.Data.Repository

@@ -1,19 +1,13 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
+using System.Net.Http.Headers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 
-using Azure.Messaging.ServiceBus.Administration;
-
 using CMH.Process;
-using CMH.Data.Repository;
-using CMH.Data.Model;
-using CMH.Common.Enum;
-using System.Globalization;
+using CMH.Process.Service;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -34,43 +28,13 @@ namespace CMH.Process
                 _.AddServiceBusAdministrationClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
             });
 
-            builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
-            builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
-
-            InitiateProcessChannels(builder, configuration);
-        }
-
-        private static void InitiateProcessChannels(IFunctionsHostBuilder builder, IConfigurationRoot configuration)
-        {
-            var provider = builder.Services.BuildServiceProvider();
-            var processChannelPolicyRepository = provider.GetRequiredService<IProcessChannelPolicyRepository>();
-
-            var processChannelPolicies = configuration.GetSection("ProcessChannelPolicies").Get<List<string>>();
-            if (processChannelPolicies != null && processChannelPolicies.Any())
+            builder.Services.AddHttpClient("RepositoryService", _ =>
             {
-                var connectionString = configuration.GetValue<string>("Values:ServiceBusConnection");
-                var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
+                _.BaseAddress = new Uri($"{configuration.GetValue<string>("API:BaseUrl")}{configuration.GetValue<string>("API:Version")}/");
+                _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            });
 
-                foreach (var policy in processChannelPolicies)
-                {
-                    var values = policy.Split(';');
-                    var processChannelPolicy = new ProcessChannelPolicy()
-                    {
-                        Name = Enum.Parse<ProcessChannel>(values.FirstOrDefault(_ => _.StartsWith("Name=")).Split('=')[1]).ToString(),
-                        Tries = short.Parse(values.FirstOrDefault(_ => _.StartsWith("Tries=")).Split('=')[1]),
-                        InitialSleepTime = short.Parse(values.FirstOrDefault(_ => _.StartsWith("InitialSleepTime=")).Split('=')[1]),
-                        BackoffFactor = double.Parse(values.FirstOrDefault(_ => _.StartsWith("BackoffFactor=")).Split('=')[1], CultureInfo.InvariantCulture)
-                    };
-
-                    var processChannelQueueName = $"ProcessChannel_{processChannelPolicy.Name}";
-                    if (serviceBusAdministrationClient.QueueExistsAsync(processChannelQueueName).Result == false)
-                    {
-                        serviceBusAdministrationClient.CreateQueueAsync(processChannelQueueName).Wait();
-                    }
-
-                    processChannelPolicyRepository.Add(processChannelPolicy);
-                }
-            }
+            builder.Services.AddScoped<IRepositoryService, RepositoryService>();
         }
     }
 }

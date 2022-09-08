@@ -1,5 +1,4 @@
 ﻿using CMH.Data.Model;
-
 namespace CMH.Data.Repository
 {
     public interface IDataSourceRepository
@@ -13,7 +12,7 @@ namespace CMH.Data.Repository
 
     public class DataSourceRepository : IDataSourceRepository
     {
-        private readonly List<DataSource> _dataSources = new();
+        private static readonly List<DataSource> _dataSources = new();
 
         public DataSource Add(DataSource dataSource)
         {

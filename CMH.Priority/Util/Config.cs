@@ -1,4 +1,4 @@
-﻿using CMH.Common.Enum;
+﻿using CMH.Common.Variable;
 
 namespace CMH.Priority.Util
 {

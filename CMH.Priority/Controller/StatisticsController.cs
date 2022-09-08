@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-using CMH.Common.Enum;
+using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
 
@@ -56,11 +56,36 @@ namespace CMH.Priority.Controller
             return _runtimeStatisticsRepository.GetRuntimeStatistics();
         }
 
-        [HttpGet]
+        [HttpPut]
         [Route("runtime/reset")]
         public void ResetRuntimeStatistics()
         {
             _runtimeStatisticsRepository.ResetRuntimeStatistics();
+        }
+
+        [HttpPost]
+        [Route("message/process/handled/{processChannel}/{processMessageStatus}/{duration}")]
+        public void MessageHandledAsync(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
+        {
+            switch(messageHandleStatus)
+            {
+                case MessageHandleStatus.Completed:
+                    _messageStatisticsRepository.ProcessMessageCompleted(processChannel, duration);
+                    break;
+                case MessageHandleStatus.Rescheduled:
+                    _messageStatisticsRepository.ProcessMessageRescheduled(processChannel);
+                    break;
+                case MessageHandleStatus.Discarded:
+                    _messageStatisticsRepository.ProcessMessageDiscarded(processChannel);
+                    break;
+            }
+        }
+
+        [HttpPost]
+        [Route("runtime/process/finished/{duration}")]
+        public void ProcessFinishedAsync(double duration)
+        {
+            _runtimeStatisticsRepository.MessageProcessingFinished(duration);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace CMH.Common.Enum
+﻿namespace CMH.Common.Variable
 {
     public enum ProcessChannel
     {

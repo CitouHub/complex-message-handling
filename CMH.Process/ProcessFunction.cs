@@ -10,31 +10,21 @@ using Newtonsoft.Json;
 using CMH.Common.Message;
 using CMH.Common.Util;
 using CMH.Common.Extenstion;
-using CMH.Data.Repository;
 using CMH.Process.Extension;
-using CMH.Common.Enum;
+using CMH.Common.Variable;
+using CMH.Process.Service;
 
 namespace CMH.Function
 {
     public class ProcessFunction
     {
         private readonly ServiceBusClient _serviceBusClient;
-        private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
-        private readonly IMessageStatisticsRepository _messageStatisticsRepository;
-        private readonly IDataSourceRepository _dataSourceRepository;
-        private readonly IProcessChannelPolicyRepository _processChannelPolicyRepository;
+        private readonly IRepositoryService _repositoryService;
 
-        public ProcessFunction(ServiceBusClient serviceBusClient,
-            IRuntimeStatisticsRepository runtimeStatisticsRepository,
-            IMessageStatisticsRepository messageStatisticsRepository,
-        IDataSourceRepository dataSourceRepository,
-            IProcessChannelPolicyRepository processChannelPolicyRepository)
+        public ProcessFunction(ServiceBusClient serviceBusClient, IRepositoryService repositoryService)
         {
             _serviceBusClient = serviceBusClient;
-            _runtimeStatisticsRepository = runtimeStatisticsRepository;
-            _messageStatisticsRepository = messageStatisticsRepository;
-            _dataSourceRepository = dataSourceRepository;
-            _processChannelPolicyRepository = processChannelPolicyRepository;
+            _repositoryService = repositoryService;
         }
 
         [FunctionName("ProcessChannel_Default")]
@@ -71,16 +61,16 @@ namespace CMH.Function
             var success = await HandleJobMessageAsync(message.Body.ToString());
             var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
             await HandleResult(success, processChannel, message, log);
-            _runtimeStatisticsRepository.MessageProcessingFinished((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+            await _repositoryService.ProcessFinishedAsync((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
         }
 
         private async Task<bool> HandleJobMessageAsync(string message)
         {
             var jobMessage = JsonConvert.DeserializeObject<JobMessage>(message);
-            var dataSource = _dataSourceRepository.Get(jobMessage.DataSourceId);
+            var dataSource = await _repositoryService.GetDataSourceAsync(jobMessage.DataSourceId);
             if (dataSource == null)
             {
-                throw new Exception("Unknown datasource");
+                throw new Exception($"Unknown data source {jobMessage.DataSourceId}");
             }
 
             return await dataSource.DoWork();
@@ -88,9 +78,10 @@ namespace CMH.Function
 
         private async Task HandleResult(bool success, ProcessChannel processChannel, ServiceBusReceivedMessage message, ILogger log)
         {
+            var enqueuedTime = (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"];
             if (!success)
             {
-                var processChannelPolicy = _processChannelPolicyRepository.Get(processChannel);
+                var processChannelPolicy = await _repositoryService.GetProcessChannelPolicyAsync(processChannel);
                 var tries = (int)message.ApplicationProperties["Tries"];
                 if(tries < processChannelPolicy.Tries)
                 {
@@ -104,17 +95,17 @@ namespace CMH.Function
 
                     var sender = _serviceBusClient.CreateSender(processChannelPolicy.Name);
                     await sender.RescheduleMessageAsync(message, scheduledEnqueueTime);
-                    _messageStatisticsRepository.ProcessMessageRescheduled(processChannel);
+                    await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Rescheduled, enqueuedTime);
                 } 
                 else
                 {
                     log.LogWarning($"Unable to process message {message.MessageId} {message.Body} due to too many tries");
-                    _messageStatisticsRepository.ProcessMessageDiscarded(processChannel);
+                    await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Discarded, enqueuedTime);
                 }
             }
             else
             {
-                _messageStatisticsRepository.ProcessMessageHandled(processChannel, message);
+                await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Completed, enqueuedTime);
             }
         }
     }

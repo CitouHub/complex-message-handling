@@ -4,71 +4,94 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+import LoadingButton from '@mui/lab/LoadingButton';
+import SendIcon from '@mui/icons-material/Send';
 
 import QueueService from '../service/queue.service';
 import DataSourceService from '../service/datasource.service';
 
 const SendMessages = () => {
     const [loading, setLoading] = useState(true);
-    const [messages, setMessages] = useState(0);
+    const [sendingMessages, setSendingMessages] = useState(false);
+    const [nbrOfMessages, setNbrOfMessages] = useState(0);
     const [dataSources, setDataSources] = useState([]);
     const [dataSource, setDataSource] = useState({});
-    const [priorityQueues, setPriorityQueues] = useState([])
-    const [priorityQueue, setPriorityQueue] = useState({});
+    const [priorityQueueNames, setPriorityQueueNames] = useState([])
+    const [priorityQueueName, setPriorityQueueName] = useState('');
 
     useEffect(() => {
         var getDataSources = DataSourceService.getDataSources();
-        var getQueues = QueueService.getQueues('priority');
+        var getQueueNames = QueueService.getQueueNames('priority');
 
-        Promise.all([getDataSources, getQueues]).then((result) => {
+        Promise.all([getDataSources, getQueueNames]).then((result) => {
             setDataSources(result[0]);
-            setPriorityQueues(result[1]);
+            setPriorityQueueNames(result[1]);
             setLoading(false);
         });
     }, []);
+
+    const sendMessages = () => {
+        setSendingMessages(true);
+        QueueService.sendMessages(nbrOfMessages, priorityQueueName, dataSource.id).then(() => {
+            setSendingMessages(false);
+        });
+    }
 
     return (
         <div>
             {loading && <p>Loading...</p>}
             {!loading &&
-                <div>
-                    <TextField
-                        id="nbr-or-messages"
-                        variant="outlined"
-                        label="Nbr. of messages"
-                        type="number"
-                        value={messages}
-                        onChange={e => setMessages(e.target.value)}
-                    />
-                    <FormControl sx={{ width: '200px' }}>
-                        <InputLabel id="messages-data-source">Data source</InputLabel>
-                        <Select
-                            labelId="messages-data-source"
-                            id="select-messages-data-source"
-                            value={dataSource}
-                            label="Data source"
-                            onChange={e => setDataSource(e.target.value)}
-                        >
-                            {dataSources.map((dataSource) => (
-                                <MenuItem key={dataSource.id} value={dataSource.id}> {dataSource.description} </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <FormControl sx={{ width: '200px' }}>
-                        <InputLabel id="messages-data-source">Priority queue</InputLabel>
-                        <Select
-                            labelId="messages-pritority"
-                            id="select-messages-priority"
-                            value={priorityQueue}
-                            label="Priority queue"
-                            onChange={e => setPriorityQueue(e.target.value)}
-                        >
-                            {priorityQueues.map((priorityQueue) => (
-                                <MenuItem key={priorityQueue} value={priorityQueue}> {priorityQueue} </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </div>
+                <React.Fragment>
+
+                    <div>
+                        <TextField
+                            id="nbr-or-messages"
+                            variant="outlined"
+                            label="Nbr. of messages"
+                            type="number"
+                            value={nbrOfMessages}
+                            onChange={e => setNbrOfMessages(e.target.value)}
+                        />
+                        <FormControl sx={{ width: '200px' }}>
+                            <InputLabel id="messages-data-source">Data source</InputLabel>
+                            <Select
+                                labelId="messages-data-source"
+                                id="select-messages-data-source"
+                                value={dataSource.description}
+                                label="Data source"
+                                onChange={e => setDataSource(e.target.value)}
+                            >
+                                {dataSources.map((dataSource) => (
+                                    <MenuItem key={dataSource.id} value={dataSource}> {dataSource.description} </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <FormControl sx={{ width: '200px' }}>
+                            <InputLabel id="messages-data-source">Priority queue</InputLabel>
+                            <Select
+                                labelId="messages-pritority"
+                                id="select-messages-priority"
+                                value={priorityQueueName}
+                                label="Priority queue"
+                                onChange={e => setPriorityQueueName(e.target.value)}
+                            >
+                                {priorityQueueNames.map((priorityQueueName) => (
+                                    <MenuItem key={priorityQueueName} value={priorityQueueName}> {priorityQueueName} </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </div>
+                    <div>
+                        <LoadingButton
+                            loading={sendingMessages}
+                            variant="contained"
+                            loadingPosition="start"
+                            startIcon={<SendIcon />}
+                            onClick={sendMessages}>
+                            {sendingMessages === false ? 'Send messages': 'Sending messages...'}
+                        </LoadingButton>
+                    </div>
+                </React.Fragment>
             }
         </div>
     );

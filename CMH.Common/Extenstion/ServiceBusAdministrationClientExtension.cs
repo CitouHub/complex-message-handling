@@ -4,7 +4,7 @@ namespace CMH.Common.Extenstion
 {
     public static class ServiceBusAdministrationClientExtension
     {
-        public static async Task<List<string>> GetQueuesAsync(this ServiceBusAdministrationClient client,
+        public static async Task<List<string>> GetQueueNamesAsync(this ServiceBusAdministrationClient client,
             string queuePrefix, CancellationToken cancellationToken = default)
         {
             var queueNames = new List<string>();

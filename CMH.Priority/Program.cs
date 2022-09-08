@@ -1,15 +1,16 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
 
+using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Azure;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Service;
 using CMH.Priority.Util;
 using CMH.Data.Repository;
 using CMH.Data.Model;
-using CMH.Common.Enum;
-using Swashbuckle.AspNetCore.SwaggerUI;
+using CMH.Common.Variable;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +49,7 @@ builder.Services.AddSingleton<Config>();
 var app = builder.Build();
 
 InitiateDataSources(app, builder.Configuration);
+InitiateProcessChannels(app, builder.Configuration);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -82,14 +84,47 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
             var values = dataSourceDefault.Split(';');
             var dataSource = new DataSource()
             {
-                Id = short.Parse(values.First(_ => _.StartsWith("Id=")).Split('=')[1] ?? "0"),
-                FailRate = double.Parse(values.First(_ => _.StartsWith("FailRate=")).Split('=')[1] ?? "0.0", CultureInfo.InvariantCulture),
-                MinProcessTime = int.Parse(values.First(_ => _.StartsWith("MinProcessTime=")).Split('=')[1] ?? "0"),
-                MaxProcessTime = int.Parse(values.First(_ => _.StartsWith("MaxProcessTime=")).Split('=')[1] ?? "0"),
+                Id = short.Parse(values.First(_ => _.StartsWith("Id=")).Split('=')[1]),
+                FailRate = double.Parse(values.First(_ => _.StartsWith("FailRate=")).Split('=')[1], CultureInfo.InvariantCulture),
+                MinProcessTime = int.Parse(values.First(_ => _.StartsWith("MinProcessTime=")).Split('=')[1]),
+                MaxProcessTime = int.Parse(values.First(_ => _.StartsWith("MaxProcessTime=")).Split('=')[1]),
                 ProcessChannel = Enum.Parse<ProcessChannel>(values.First(_ => _.StartsWith("ProcessChannel=")).Split('=')[1])
             };
 
             dataSourceRepository.Add(dataSource);
+        }
+    }
+}
+
+static void InitiateProcessChannels(WebApplication app, ConfigurationManager configuration)
+{
+    using var scope = app.Services.CreateScope();
+    var processChannelPolicyRepository = scope.ServiceProvider.GetRequiredService<IProcessChannelPolicyRepository>();
+
+    var processChannelPolicies = configuration.GetSection("ProcessChannelPolicies").Get<List<string>>();
+    if (processChannelPolicies != null && processChannelPolicies.Any())
+    {
+        var connectionString = configuration.GetValue<string>("Values:ServiceBusConnection");
+        var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
+
+        foreach (var policy in processChannelPolicies)
+        {
+            var values = policy.Split(';');
+            var processChannelPolicy = new ProcessChannelPolicy()
+            {
+                Name = Enum.Parse<ProcessChannel>(values.First(_ => _.StartsWith("Name=")).Split('=')[1]).ToString(),
+                Tries = short.Parse(values.First(_ => _.StartsWith("Tries=")).Split('=')[1]),
+                InitialSleepTime = short.Parse(values.First(_ => _.StartsWith("InitialSleepTime=")).Split('=')[1]),
+                BackoffFactor = double.Parse(values.First(_ => _.StartsWith("BackoffFactor=")).Split('=')[1], CultureInfo.InvariantCulture)
+            };
+
+            var processChannelQueueName = $"ProcessChannel_{processChannelPolicy.Name}";
+            if (serviceBusAdministrationClient.QueueExistsAsync(processChannelQueueName).Result == false)
+            {
+                serviceBusAdministrationClient.CreateQueueAsync(processChannelQueueName).Wait();
+            }
+
+            processChannelPolicyRepository.Add(processChannelPolicy);
         }
     }
 }

@@ -1,15 +1,13 @@
-﻿using Azure.Messaging.ServiceBus;
-
-using CMH.Common.Enum;
+﻿using CMH.Common.Variable;
 using CMH.Data.Model;
 
 namespace CMH.Data.Repository
 {
     public interface IMessageStatisticsRepository
     {
-        void PriorityMessageHandled(short priority, ServiceBusReceivedMessage message);
+        void PriorityMessageCompleted(short priority, double duration);
         void PriorityMessageRescheduled(short priority);
-        void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message);
+        void ProcessMessageCompleted(ProcessChannel processChannel, double duration);
         void ProcessMessageRescheduled(ProcessChannel processChannel);
         void ProcessMessageDiscarded(ProcessChannel processChannel);
         Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics();
@@ -39,15 +37,14 @@ namespace CMH.Data.Repository
             }
         }
 
-        public void PriorityMessageHandled(short priority, ServiceBusReceivedMessage message)
+        public void PriorityMessageCompleted(short priority, double duration)
         {
             lock (_priorityMessagesStatistics)
             {
                 InitiatePriorityMessagesStatistics(priority);
 
                 _priorityMessagesStatistics[priority].TotalMessagesHandled++;
-                _priorityMessagesStatistics[priority].TotalMessageDuration =
-                    (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
+                _priorityMessagesStatistics[priority].TotalMessageDuration += duration;
             }
         }
 
@@ -61,15 +58,14 @@ namespace CMH.Data.Repository
             }
         }
 
-        public void ProcessMessageHandled(ProcessChannel processChannel, ServiceBusReceivedMessage message)
+        public void ProcessMessageCompleted(ProcessChannel processChannel, double duration)
         {
             lock (_processMessagesStatistics)
             {
                 InitiateProcessMessagesStatistics(processChannel);
 
                 _processMessagesStatistics[processChannel].TotalMessagesHandled++;
-                _processMessagesStatistics[processChannel].TotalMessageDuration = 
-                    (DateTimeOffset.UtcNow - (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds;
+                _processMessagesStatistics[processChannel].TotalMessageDuration += duration;
             }
         }
 

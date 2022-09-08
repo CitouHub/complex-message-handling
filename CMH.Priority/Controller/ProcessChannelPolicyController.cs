@@ -1,4 +1,4 @@
-using CMH.Common.Enum;
+using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
 using Microsoft.AspNetCore.Mvc;

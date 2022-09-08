@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using CMH.Common.Extenstion;
 using CMH.Common.Message;
 using CMH.Data.Repository;
+using CMH.Common.Variable;
 
 namespace CMH.Priority.Controller
 {
@@ -28,18 +29,18 @@ namespace CMH.Priority.Controller
 
         [HttpGet]
         [Route("{queuePrefix}")]
-        public async Task<List<string>> GetQueues(string queuePrefix)
+        public async Task<List<string>> GetQueueNames(string queuePrefix)
         {
-            return await _serviceBusAdministrationClient.GetQueuesAsync(queuePrefix);
+            return await _serviceBusAdministrationClient.GetQueueNamesAsync(queuePrefix);
         }
 
         [HttpPost]
-        [Route("{nbrOfMessages}")]
+        [Route("send/{nbrOfMessages}")]
         public async Task SendMessages(int nbrOfMessages, string? queueName, short? dataSourceId)
         {
             var maxMessageBatch = 500;
             var random = new Random();
-            var priorityQueues = await _serviceBusAdministrationClient.GetQueuesAsync("priority");
+            var priorityQueues = await _serviceBusAdministrationClient.GetQueueNamesAsync(PriorityQueue.Prefix);
             var dataSources = _dataSourceRepository.GetAll();
 
             while (nbrOfMessages > 0)
@@ -56,7 +57,7 @@ namespace CMH.Priority.Controller
                 var priorityQueue = priorityQueues.FirstOrDefault(_ => _ == queueName) ?? priorityQueues[random.Next(priorityQueues.Count)];
                 var sender = _serviceBusClient.CreateSender(priorityQueue);
                 await sender.SendMessagesAsync(messages);
-                nbrOfMessages = nbrOfMessages - messages.Count;
+                nbrOfMessages -= messages.Count;
             }
         }
     }
