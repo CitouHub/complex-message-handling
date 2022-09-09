@@ -49,7 +49,7 @@ builder.Services.AddSingleton<Config>();
 var app = builder.Build();
 
 InitiateDataSources(app, builder.Configuration);
-InitiateProcessChannels(app, builder.Configuration);
+InitiateProcessChannelPolicies(app, builder.Configuration);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -96,15 +96,15 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
     }
 }
 
-static void InitiateProcessChannels(WebApplication app, ConfigurationManager configuration)
+static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationManager configuration)
 {
     using var scope = app.Services.CreateScope();
     var processChannelPolicyRepository = scope.ServiceProvider.GetRequiredService<IProcessChannelPolicyRepository>();
 
-    var processChannelPolicies = configuration.GetSection("ProcessChannelPolicies").Get<List<string>>();
+    var processChannelPolicies = configuration.GetSection("Repository:ProcessChannelPolicies:Default").Get<List<string>>();
     if (processChannelPolicies != null && processChannelPolicies.Any())
     {
-        var connectionString = configuration.GetValue<string>("Values:ServiceBusConnection");
+        var connectionString = configuration.GetValue<string>("ServiceBus:ConnectionString");
         var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
 
         foreach (var policy in processChannelPolicies)

@@ -6,6 +6,7 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import LoadingButton from '@mui/lab/LoadingButton';
 import SendIcon from '@mui/icons-material/Send';
+import NotificationMessage from '../component/notification/snackbar.message';
 
 import QueueService from '../service/queue.service';
 import DataSourceService from '../service/datasource.service';
@@ -13,6 +14,7 @@ import DataSourceService from '../service/datasource.service';
 const SendMessages = () => {
     const [loading, setLoading] = useState(true);
     const [sendingMessages, setSendingMessages] = useState(false);
+    const [notification, setNotification] = useState('');
     const [nbrOfMessages, setNbrOfMessages] = useState(0);
     const [dataSources, setDataSources] = useState([]);
     const [dataSource, setDataSource] = useState({});
@@ -34,6 +36,7 @@ const SendMessages = () => {
         setSendingMessages(true);
         QueueService.sendMessages(nbrOfMessages, priorityQueueName, dataSource.id).then(() => {
             setSendingMessages(false);
+            setNotification('Messages sent!')
         });
     }
 
@@ -42,9 +45,8 @@ const SendMessages = () => {
             {loading && <p>Loading...</p>}
             {!loading &&
                 <React.Fragment>
-
                     <div>
-                        <TextField
+                        <TextField sx={{ width: '200px', paddingRight: '1rem' }}
                             id="nbr-or-messages"
                             variant="outlined"
                             label="Nbr. of messages"
@@ -52,7 +54,7 @@ const SendMessages = () => {
                             value={nbrOfMessages}
                             onChange={e => setNbrOfMessages(e.target.value)}
                         />
-                        <FormControl sx={{ width: '200px' }}>
+                        <FormControl sx={{ width: '300px', paddingRight: '1rem' }}>
                             <InputLabel id="messages-data-source">Data source</InputLabel>
                             <Select
                                 labelId="messages-data-source"
@@ -66,7 +68,7 @@ const SendMessages = () => {
                                 ))}
                             </Select>
                         </FormControl>
-                        <FormControl sx={{ width: '200px' }}>
+                        <FormControl sx={{ width: '300px', paddingRight: '1rem' }}>
                             <InputLabel id="messages-data-source">Priority queue</InputLabel>
                             <Select
                                 labelId="messages-pritority"
@@ -91,6 +93,11 @@ const SendMessages = () => {
                             {sendingMessages === false ? 'Send messages': 'Sending messages...'}
                         </LoadingButton>
                     </div>
+                    <NotificationMessage
+                        open={notification !== ''}
+                        close={() => setNotification('')}
+                        text={notification}
+                        severity='info' />
                 </React.Fragment>
             }
         </div>

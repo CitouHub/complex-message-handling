@@ -3,9 +3,11 @@ import { Container } from "reactstrap";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
+import SendMessages from './view/sendmessages';
+import DataSources from './view/datasources';
+import ProcessChannelPolicies from './view/processchannelpolicies';
 
 import Config from './util/config';
-import SendMessages from './view/sendmessages';
 import AppSettingsService from './service/appsettings.service';
 
 import './custom.css';
@@ -72,10 +74,10 @@ const App = () => {
                             <SendMessages />
                         </TabPanel>
                         <TabPanel value={value} index={1}>
-                            Item Two
+                            <DataSources />
                         </TabPanel>
                         <TabPanel value={value} index={2}>
-                            Item Three
+                            <ProcessChannelPolicies />
                         </TabPanel>
                         <TabPanel value={value} index={3}>
                             Item Four
