@@ -21,9 +21,9 @@ namespace CMH.Priority.Util
 
         public void Reset()
         {
-            QueueCache.Reset();
-            Priority.Reset();
-            BackoffPolicy.Reset();
+            QueueCache = new();
+            Priority = new();
+            BackoffPolicy = new();
         }
 
         public class QueueCacheClass

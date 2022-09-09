@@ -5,7 +5,7 @@ namespace CMH.Common.Extenstion
     public static class ServiceBusSenderExtension
     {
         public static async Task RescheduleMessageAsync(this ServiceBusSender sender, 
-            ServiceBusReceivedMessage message,DateTimeOffset scheduledEnqueueTime,
+            ServiceBusReceivedMessage message, DateTimeOffset scheduledEnqueueTime,
             CancellationToken cancellationToken = default)
         {
             //Schedule new message

@@ -5,6 +5,7 @@ using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
 using CMH.Common.Util;
+using CMH.Common.Variable;
 using CMH.Data.Repository;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Util;
@@ -101,7 +102,7 @@ namespace CMH.Priority.Service
                                     break;
                                 }
 
-                                var processChannelQueueName = $"ProcessChannel_{_dataSourceRepository.Get(dataSourceMessages?.Key.DataSourceId ?? -1)?.ProcessChannel}";
+                                var processChannelQueueName = $"{Queue.ProcessQueuePrefix}{_dataSourceRepository.Get(dataSourceMessages?.Key.DataSourceId ?? -1)?.ProcessChannel}";
                                 _logger.LogInformation($"Handling messages for {dataSourceMessages?.Key.DataSourceId}, target {processChannelQueueName}");
 
                                 var availableSpots = await GetAvailableProcessChannelSpotsAsync(processChannelQueueName, priority, cancellationToken);

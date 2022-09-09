@@ -28,7 +28,7 @@ namespace CMH.Function
         }
 
         [FunctionName("ProcessChannel_Default")]
-        public async Task ProcessChannel_Default([ServiceBusTrigger("ProcessChannel_Default", Connection = "ServiceBusConnection")] ServiceBusReceivedMessage message, 
+        public async Task ProcessChannel_Default([ServiceBusTrigger("ProcessChannel_Default", Connection = "ServiceBusConnection")] ServiceBusReceivedMessage message,
             ILogger log, ExecutionContext executionContext)
         {
             await ProcessMessageAsync(message, log, executionContext.FunctionName);
@@ -57,11 +57,19 @@ namespace CMH.Function
 
         public async Task ProcessMessageAsync(ServiceBusReceivedMessage message, ILogger log, string functionName)
         {
-            var executionStart = DateTimeOffset.UtcNow;
-            var success = await HandleJobMessageAsync(message.Body.ToString());
-            var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
-            await HandleResult(success, processChannel, message, log);
-            await _repositoryService.ProcessFinishedAsync((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+            try
+            {
+                var executionStart = DateTimeOffset.UtcNow;
+                var success = await HandleJobMessageAsync(message.Body.ToString());
+                var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
+                await HandleResult(success, processChannel, message, log);
+                await _repositoryService.ProcessFinishedAsync((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+            } 
+            catch(Exception e)
+            {
+                log.LogError($"{e.Message}\n{e.StackTrace}", e);
+                throw;
+            }
         }
 
         private async Task<bool> HandleJobMessageAsync(string message)
@@ -93,7 +101,7 @@ namespace CMH.Function
 
                     log.LogInformation($"Processing message failed, new attempted rescheduled in {sleepTime} s, at {scheduledEnqueueTime:mm:hh:ss}");
 
-                    var sender = _serviceBusClient.CreateSender(processChannelPolicy.Name);
+                    var sender = _serviceBusClient.CreateSender($"{Queue.ProcessQueuePrefix}{processChannelPolicy.Name}");
                     await sender.RescheduleMessageAsync(message, scheduledEnqueueTime);
                     await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Rescheduled, enqueuedTime);
                 } 

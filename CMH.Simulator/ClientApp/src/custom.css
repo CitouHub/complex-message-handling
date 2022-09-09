@@ -12,3 +12,16 @@ code {
   background-color: #1b6ec2;
   border-color: #1861ac;
 }
+
+table {
+    width: 100%;
+    margin-bottom: 2rem;
+}
+
+table, td, th {
+    border: 1px solid;
+}
+
+thead {
+    font-weight: 700;
+}

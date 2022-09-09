@@ -118,7 +118,7 @@ static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationMana
                 BackoffFactor = double.Parse(values.First(_ => _.StartsWith("BackoffFactor=")).Split('=')[1], CultureInfo.InvariantCulture)
             };
 
-            var processChannelQueueName = $"ProcessChannel_{processChannelPolicy.Name}";
+            var processChannelQueueName = $"{Queue.ProcessQueuePrefix}{processChannelPolicy.Name}";
             if (serviceBusAdministrationClient.QueueExistsAsync(processChannelQueueName).Result == false)
             {
                 serviceBusAdministrationClient.CreateQueueAsync(processChannelQueueName).Wait();

@@ -40,7 +40,7 @@ namespace CMH.Priority.Controller
         {
             var maxMessageBatch = 500;
             var random = new Random();
-            var priorityQueues = await _serviceBusAdministrationClient.GetQueueNamesAsync(PriorityQueue.Prefix);
+            var priorityQueues = await _serviceBusAdministrationClient.GetQueueNamesAsync(Queue.PriorityQueuePrefix);
             var dataSources = _dataSourceRepository.GetAll();
 
             while (nbrOfMessages > 0)

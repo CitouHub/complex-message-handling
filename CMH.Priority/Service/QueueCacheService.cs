@@ -41,7 +41,7 @@ namespace CMH.Priority.Service
 
         private async Task UpdateQueueCache(CancellationToken cancellationToken)
         {
-            var queueNames = await _serviceBusAdministrationClient.GetQueueNamesAsync(PriorityQueue.Prefix, cancellationToken);
+            var queueNames = await _serviceBusAdministrationClient.GetQueueNamesAsync(Queue.PriorityQueuePrefix, cancellationToken);
             _queueCache.SetQueueList(queueNames);
 
             if (_timer != null)

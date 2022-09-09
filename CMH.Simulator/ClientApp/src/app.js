@@ -7,6 +7,7 @@ import SendMessages from './view/sendmessages';
 import DataSources from './view/datasources';
 import ProcessChannelPolicies from './view/processchannelpolicies';
 import Settings from './view/settings';
+import Statistics from './view/statistics';
 
 import Config from './util/config';
 import AppSettingsService from './service/appsettings.service';
@@ -84,7 +85,7 @@ const App = () => {
                             <Settings />
                         </TabPanel>
                         <TabPanel value={value} index={4}>
-                            Item Five
+                            <Statistics />
                         </TabPanel>
                     </Box>
                 </Container>

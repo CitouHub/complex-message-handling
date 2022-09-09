@@ -11,18 +11,18 @@
 
         public double AvgMessagesPerQuery
         {
-            get { return Math.Round((double)(TotalMessagesFetched / PriorityQueueQueries), 2); }
+            get { return PriorityQueueQueries > 0 ? Math.Round((double)(TotalMessagesFetched / PriorityQueueQueries), 2) : 0; }
         }
 
         public double AvgMessagesFetchDuration
         {
-            get { return Math.Round((double)(TotalMessageFetchDuration / TotalMessagesFetched), 2); }
+            get { return TotalMessagesFetched > 0 ? Math.Round((double)(TotalMessageFetchDuration / TotalMessagesFetched), 2) : 0; }
         }
 
         //$0.000016 for every GB-s of memory (first 400 000 GB-s is free)
         public double ApproxExecutionTimeCost
         {
-            get { return ((TotalMemoryUsage / (TotalProcessDuration / 1000)) * TotalMessagesProcessed) * 0.000016; }
+            get { return TotalMessagesProcessed > 0 && TotalProcessDuration > 0 ? ((TotalMemoryUsage / (TotalProcessDuration / 1000)) * TotalMessagesProcessed) * 0.000016 : 0; }
         }
 
         //$0.2 for every 1 000 000 execution (first 1 000 000 is free)

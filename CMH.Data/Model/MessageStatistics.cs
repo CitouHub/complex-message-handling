@@ -9,18 +9,12 @@
         
         public double AvgMessageHandleDuration 
         { 
-            get
-            {
-                return Math.Round((double)(TotalMessageDuration / TotalMessagesHandled), 2);
-            }
+            get { return TotalMessagesHandled > 0 ? Math.Round((double)(TotalMessageDuration / TotalMessagesHandled), 2) : 0; }
         }
 
         public double RescheduleRate
         {
-            get
-            {
-                return 100 * Math.Round((double)(TotalMessagesRescheduled / TotalMessagesHandled), 2);
-            }
+            get { return TotalMessagesHandled > 0 ? 100 * Math.Round((double)(TotalMessagesRescheduled / TotalMessagesHandled), 2) : 0; }
         }
     }
 }
