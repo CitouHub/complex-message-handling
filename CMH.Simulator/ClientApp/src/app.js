@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import SendMessages from './view/sendmessages';
 import DataSources from './view/datasources';
 import ProcessChannelPolicies from './view/processchannelpolicies';
+import Settings from './view/settings';
 
 import Config from './util/config';
 import AppSettingsService from './service/appsettings.service';
@@ -80,7 +81,7 @@ const App = () => {
                             <ProcessChannelPolicies />
                         </TabPanel>
                         <TabPanel value={value} index={3}>
-                            Item Four
+                            <Settings />
                         </TabPanel>
                         <TabPanel value={value} index={4}>
                             Item Five
