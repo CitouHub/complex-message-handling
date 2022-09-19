@@ -13,6 +13,7 @@ using CMH.Common.Extenstion;
 using CMH.Process.Extension;
 using CMH.Common.Variable;
 using CMH.Process.Service;
+using CMH.Process.Util;
 
 namespace CMH.Function
 {
@@ -57,18 +58,23 @@ namespace CMH.Function
 
         public async Task ProcessMessageAsync(ServiceBusReceivedMessage message, ILogger log, string functionName)
         {
+            var executionStart = DateTimeOffset.UtcNow;
+            RuntimeTracker.StartSession();
+
             try
             {
-                var executionStart = DateTimeOffset.UtcNow;
                 var success = await HandleJobMessageAsync(message.Body.ToString());
                 var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
-                await HandleResult(success, processChannel, message, log);
-                await _repositoryService.ProcessFinishedAsync((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+                await HandleResult(success, processChannel, message, log);    
             } 
             catch(Exception e)
             {
                 log.LogError($"{e.Message}\n{e.StackTrace}", e);
                 throw;
+            } 
+            finally
+            {
+                RuntimeTracker.StopSession((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
             }
         }
 

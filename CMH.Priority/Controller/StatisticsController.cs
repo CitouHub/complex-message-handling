@@ -23,7 +23,7 @@ namespace CMH.Priority.Controller
 
         [HttpGet]
         [Route("messages/priority")]
-        public Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics()
+        public Dictionary<string, MessageStatistics> GetPriorityMessagesStatistics()
         {
             return _messageStatisticsRepository.GetPriorityMessagesStatistics();
         }
@@ -79,13 +79,6 @@ namespace CMH.Priority.Controller
                     _messageStatisticsRepository.ProcessMessageDiscarded(processChannel);
                     break;
             }
-        }
-
-        [HttpPost]
-        [Route("runtime/process/finished/{duration}")]
-        public void ProcessFinishedAsync(double duration)
-        {
-            _runtimeStatisticsRepository.MessageProcessingFinished(duration);
         }
     }
 }

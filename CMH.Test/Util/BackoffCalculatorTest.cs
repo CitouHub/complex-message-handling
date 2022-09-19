@@ -30,7 +30,6 @@ namespace CMH.Test.Util
         [InlineData(1, 0, 1, 1, 1, 1, 0)]
         [InlineData(1, 1, 0, 1, 1, 1, 0)]
         [InlineData(1, 1, 1, 0, 1, 1, 0)]
-        [InlineData(1, 1, 1, 1, 0, 1, 0)]
         [InlineData(1, 1, 1, 1, 1, 0, 0)]
         [InlineData(1, 1, 1, 1, 1, 1, 1)]
         [InlineData(-1, 1, 1, 1, 1, 1, 0)]
@@ -39,12 +38,12 @@ namespace CMH.Test.Util
         [InlineData(1, 1, 1, -1, 1, 1, 0)]
         [InlineData(1, 1, 1, 1, -1, 1, 0)]
         [InlineData(1, 1, 1, 1, 1, -1, 0)]
-        [InlineData(2, 3, 5, 4, 1, int.MaxValue, 120)]
+        [InlineData(2, 3, 5, 4, 0, int.MaxValue, 120)]
         [InlineData(2, 3, 5, 4, 1, 119, 119)]
-        public void CalculatePriorityRescheduleSleepTime(int initialSleepTime, double tryFactor, double priorityFactor, int tries, short priority, int maxSleepTime, int expectedSleepTime)
+        public void CalculatePriorityRescheduleSleepTime(int initialSleepTime, double tryFactor, double priorityFactor, int tries, short priorityIndex, int maxSleepTime, int expectedSleepTime)
         {
             //Act
-            var sleepTime = BackoffCalculator.CalculatePriorityRescheduleSleepTime(initialSleepTime, tryFactor, priorityFactor, tries, priority, maxSleepTime);
+            var sleepTime = BackoffCalculator.CalculatePriorityRescheduleSleepTime(initialSleepTime, tryFactor, priorityFactor, tries, priorityIndex, maxSleepTime);
 
             //Assert
             Assert.Equal(expectedSleepTime, sleepTime);

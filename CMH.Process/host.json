@@ -10,7 +10,7 @@
     },
     "extensions": {
         "serviceBus": {
-            "maxConcurrentCalls": "30"
+            "maxConcurrentCalls": "25"
         }
     }
 }

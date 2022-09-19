@@ -5,12 +5,12 @@ namespace CMH.Data.Repository
 {
     public interface IMessageStatisticsRepository
     {
-        void PriorityMessageCompleted(short priority, double duration);
-        void PriorityMessageRescheduled(short priority);
+        void PriorityMessageCompleted(string priorityQueueName, double duration);
+        void PriorityMessageRescheduled(string priorityQueueName);
         void ProcessMessageCompleted(ProcessChannel processChannel, double duration);
         void ProcessMessageRescheduled(ProcessChannel processChannel);
         void ProcessMessageDiscarded(ProcessChannel processChannel);
-        Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics();
+        Dictionary<string, MessageStatistics> GetPriorityMessagesStatistics();
         Dictionary<ProcessChannel, MessageStatistics> GetProcessMessagesStatistics();
         void ResetPriorityMessagesStatistics();
         void ResetProcessMessagesStatistics();
@@ -18,14 +18,14 @@ namespace CMH.Data.Repository
 
     public class MessageStatisticsRepository : IMessageStatisticsRepository
     {
-        private Dictionary<short, MessageStatistics> _priorityMessagesStatistics = new();
+        private Dictionary<string, MessageStatistics> _priorityMessagesStatistics = new();
         private Dictionary<ProcessChannel, MessageStatistics> _processMessagesStatistics = new();
 
-        private void InitiatePriorityMessagesStatistics(short priority)
+        private void InitiatePriorityMessagesStatistics(string priorityQueueName)
         {
-            if (!_priorityMessagesStatistics.ContainsKey(priority))
+            if (!_priorityMessagesStatistics.ContainsKey(priorityQueueName))
             {
-                _priorityMessagesStatistics[priority] = new MessageStatistics();
+                _priorityMessagesStatistics[priorityQueueName] = new MessageStatistics();
             }
         }
 
@@ -37,24 +37,24 @@ namespace CMH.Data.Repository
             }
         }
 
-        public void PriorityMessageCompleted(short priority, double duration)
+        public void PriorityMessageCompleted(string priorityQueueName, double duration)
         {
             lock (_priorityMessagesStatistics)
             {
-                InitiatePriorityMessagesStatistics(priority);
+                InitiatePriorityMessagesStatistics(priorityQueueName);
 
-                _priorityMessagesStatistics[priority].TotalMessagesHandled++;
-                _priorityMessagesStatistics[priority].TotalMessageDuration += duration;
+                _priorityMessagesStatistics[priorityQueueName].TotalMessagesHandled++;
+                _priorityMessagesStatistics[priorityQueueName].TotalMessageDuration += duration;
             }
         }
 
-        public void PriorityMessageRescheduled(short priority)
+        public void PriorityMessageRescheduled(string priorityQueueName)
         {
             lock (_priorityMessagesStatistics)
             {
-                InitiatePriorityMessagesStatistics(priority);
+                InitiatePriorityMessagesStatistics(priorityQueueName);
 
-                _priorityMessagesStatistics[priority].TotalMessagesRescheduled++;
+                _priorityMessagesStatistics[priorityQueueName].TotalMessagesRescheduled++;
             }
         }
 
@@ -89,7 +89,7 @@ namespace CMH.Data.Repository
             }
         }
 
-        public Dictionary<short, MessageStatistics> GetPriorityMessagesStatistics()
+        public Dictionary<string, MessageStatistics> GetPriorityMessagesStatistics()
         {
             return _priorityMessagesStatistics;
         }

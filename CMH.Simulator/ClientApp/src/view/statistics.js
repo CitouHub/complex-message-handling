@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import NotificationMessage from '../component/notification/snackbar.message';
 import MessageStatisticsTable from '../component/table/messagestatistics.table';
+import RuntimeStatisticsTable from '../component/table/runtimestatistics.table';
 
 import StatisticsService from '../service/statistics.service';
 
@@ -34,9 +35,7 @@ const Statistics = () => {
                 <React.Fragment>
                     <MessageStatisticsTable title='Priority statistics' category='Priority' messageStatistics={priorityStatistics} />
                     <MessageStatisticsTable title='Process statistics' category='Process' messageStatistics={processStatistics} />
-                    <div>
-                        <h2>Runtime statistics</h2>
-                    </div>
+                    <RuntimeStatisticsTable runtimeStatistics={runtimeStatistics} />
                 </React.Fragment>
             }
         </div>

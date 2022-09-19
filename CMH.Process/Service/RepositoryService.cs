@@ -14,7 +14,6 @@ namespace CMH.Process.Service
         Task<DataSource> GetDataSourceAsync(short dataSourceId);
         Task<ProcessChannelPolicy> GetProcessChannelPolicyAsync(ProcessChannel processChannel);
         Task MessageHandledAsync(ProcessChannel processChannel, MessageHandleStatus processMessageStatus, DateTimeOffset enqueueTime);
-        Task ProcessFinishedAsync(double duration);
     }
 
     public class RepositoryService : IRepositoryService
@@ -53,12 +52,17 @@ namespace CMH.Process.Service
         public async Task MessageHandledAsync(ProcessChannel processChannel, MessageHandleStatus processMessageStatus, DateTimeOffset enqueueTime)
         {
             var duration = (DateTimeOffset.UtcNow - enqueueTime).TotalMilliseconds;
-            await _httpClient.PostAsync($"statistics/message/process/handled/{processChannel}/{processMessageStatus}/{duration}", null);
+            await _httpClient.PostAsync($"statistics/message/process/handled/{processChannel}/{processMessageStatus}/{Math.Round(duration)}", null);
+        }
+
+        public async Task ProcessStartedAsync()
+        {
+            await _httpClient.PostAsync($"statistics/runtime/process/started", null);
         }
 
         public async Task ProcessFinishedAsync(double duration)
         {
-            await _httpClient.PostAsync($"statistics/runtime/process/finished/{duration}", null);
+            await _httpClient.PostAsync($"statistics/runtime/process/finished/{Math.Round(duration)}", null);
         }
     }
 }

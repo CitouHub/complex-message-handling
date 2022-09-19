@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CMH.Process;
 using CMH.Process.Service;
+using System.Net.Http;
+using System.Threading;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -35,6 +37,29 @@ namespace CMH.Process
             });
 
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+
+            AwaitInitialization(configuration);
+        }
+
+        static void AwaitInitialization(IConfigurationRoot configuration)
+        {
+            var url = new Uri($"{configuration.GetValue<string>("API:BaseUrl")}{configuration.GetValue<string>("API:Version")}/status/ready");
+            var httpClient = new HttpClient();
+
+            while(true)
+            {
+                try
+                {
+                    var result = httpClient.GetAsync(url).Result;
+                    if (result.IsSuccessStatusCode)
+                    {
+                        return;
+                    }
+                }
+                catch { }
+
+                Thread.Sleep(2000);
+            }
         }
     }
 }

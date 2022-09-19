@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus.Administration;
 using CMH.Common.Extenstion;
 using CMH.Common.Variable;
+using CMH.Data.Model;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Util;
 
@@ -41,8 +42,8 @@ namespace CMH.Priority.Service
 
         private async Task UpdateQueueCache(CancellationToken cancellationToken)
         {
-            var queueNames = await _serviceBusAdministrationClient.GetQueueNamesAsync(Queue.PriorityQueuePrefix, cancellationToken);
-            _queueCache.SetQueueList(queueNames);
+            var priorityQueues = await _serviceBusAdministrationClient.GetQueueNamesAsync(Queue.PriorityQueuePrefix, cancellationToken);
+            _queueCache.SetPriorityQueues(priorityQueues.Select(_ => new PriorityQueue() { Name = _ }).ToList());
 
             if (_timer != null)
             {

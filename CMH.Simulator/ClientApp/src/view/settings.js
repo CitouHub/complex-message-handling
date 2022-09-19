@@ -96,6 +96,18 @@ const Config = () => {
                                 setSettings(updatedSettings);
                             }}
                         />
+                        <TextField sx={{ width: '200px', paddingRight: '1rem' }}
+                            id="c-p-message-fetch-timeout"
+                            variant="outlined"
+                            label="Message fetch timeout (ms)"
+                            type="number"
+                            value={settings.priority.messageFetchTimeOut}
+                            onChange={e => {
+                                let updatedSettings = JSON.parse(JSON.stringify(settings));
+                                updatedSettings.priority.messageFetchTimeOut = e.target.value;
+                                setSettings(updatedSettings);
+                            }}
+                        />
                         <FormControl sx={{ width: '200px', paddingRight: '1rem' }}>
                             <InputLabel id="c-p-default-process-channel">Def. process channel</InputLabel>
                             <Select

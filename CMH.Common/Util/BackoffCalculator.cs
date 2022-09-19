@@ -8,9 +8,9 @@
             return HandleNegative(sleepTime <= maxSleepTime ? sleepTime : maxSleepTime);
         }
 
-        public static int CalculatePriorityRescheduleSleepTime(int initialSleepTime, double tryFactor, double priorityFactor, int tries, short priority, int maxSleepTime)
+        public static int CalculatePriorityRescheduleSleepTime(int initialSleepTime, double tryFactor, double priorityFactor, int tries, short priorityIndex, int maxSleepTime)
         {
-            var sleepTime = (int)Math.Round(initialSleepTime * tryFactor * tries * priorityFactor * priority, 0);
+            var sleepTime = (int)Math.Round(initialSleepTime * tryFactor * tries * priorityFactor * (priorityIndex + 1), 0);
             return HandleNegative(sleepTime <= maxSleepTime ? sleepTime : maxSleepTime);
         }
 

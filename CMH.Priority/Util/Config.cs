@@ -28,11 +28,6 @@ namespace CMH.Priority.Util
 
         public class QueueCacheClass
         {
-            public void Reset()
-            {
-                _RefreshInterval = null;
-            }
-
             private int? _RefreshInterval;
             public int RefreshInterval
             {
@@ -49,13 +44,6 @@ namespace CMH.Priority.Util
 
         public class PriorityClass
         {
-            public void Reset()
-            {
-                _Tasks = null;
-                _MessageBatch = null;
-                _DefaultProcessChannel = null;
-            }
-
             private short? _Tasks;
             public short Tasks
             {
@@ -82,6 +70,20 @@ namespace CMH.Priority.Util
                 }
             }
 
+            private short? _MessageFetchTimeOut;
+            public short MessageFetchTimeOut
+            {
+                get
+                {
+                    return _MessageFetchTimeOut ?? _configuration.GetValue<short>("Priority:MessageFetchTimeOut");
+                }
+                set
+                {
+                    _MessageFetchTimeOut = value;
+                }
+            }
+
+
             private ProcessChannel? _DefaultProcessChannel;
             public ProcessChannel DefaultProcessChannel
             {
@@ -102,21 +104,8 @@ namespace CMH.Priority.Util
 
             public ProcessChannelFullClass ProcessChannelFull { get; set; } = new();
 
-            public void Reset()
-            {
-                EmptyIteration.Reset();
-                ProcessChannelFull.Reset();
-            }
-
             public class EmptyIterationClass
             {
-                public void Reset()
-                {
-                    _InitialSleepTime = null;
-                    _BackoffFactor = null;
-                    _MaxSleepTime = null;
-                }
-
                 private int? _InitialSleepTime;
                 public int InitialSleepTime
                 {
@@ -159,39 +148,16 @@ namespace CMH.Priority.Util
 
             public class ProcessChannelFullClass
             {
-                public void Reset()
-                {
-                    _MaxSize = null;
-                    _PriorityStepSize = null;
-                    _InitialSleepTime = null;
-                    _PriorityFactor = null;
-                    _TryFactor = null;
-                    _MaxSleepTime = null;
-                }
-
-                private short? _MaxSize;
-                public short MaxSize
+                private short? _PrioritySlots;
+                public short PrioritySlots
                 {
                     get
                     {
-                        return _MaxSize ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:MaxSize");
+                        return _PrioritySlots ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PrioritySlots");
                     }
                     set
                     {
-                        _MaxSize = value;
-                    }
-                }
-
-                private short? _PriorityStepSize;
-                public short PriorityStepSize
-                {
-                    get
-                    {
-                        return _PriorityStepSize ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PriorityStepSize");
-                    }
-                    set
-                    {
-                        _PriorityStepSize = value;
+                        _PrioritySlots = value;
                     }
                 }
 

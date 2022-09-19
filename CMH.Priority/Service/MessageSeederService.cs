@@ -31,7 +31,7 @@ namespace CMH.Priority.Service
             var random = new Random();
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-            foreach (var queue in _queueCache.GetQueueList())
+            foreach (var priorityQueue in _queueCache.GetPriorityQueues())
             {
                 var messages = new List<ServiceBusMessage>();
 
@@ -52,7 +52,7 @@ namespace CMH.Priority.Service
                     messages.Add(serviceBusMessage);
                 }
 
-                var sender = _serviceBusClient.CreateSender(queue);
+                var sender = _serviceBusClient.CreateSender(priorityQueue.Name);
                 await sender.SendMessagesAsync(messages, cancellationToken);
             }
         }

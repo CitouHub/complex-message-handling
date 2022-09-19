@@ -11,7 +11,7 @@ const MessageStatisticsTable = ({ title, category, messageStatistics }) => {
                         <td>Tot. msg. handled</td>
                         <td>Tot. msg. rescheduled</td>
                         <td>Tot. msg. discarded</td>
-                        <td>Avg. msg. handle duration</td>
+                        <td>Avg. msg. handle duration (ms)</td>
                         <td>Reschedule rate</td>
                     </tr>
                 </thead>
@@ -23,7 +23,7 @@ const MessageStatisticsTable = ({ title, category, messageStatistics }) => {
                             <td>{messageStatistics[categoryId].totalMessagesRescheduled}</td>
                             <td>{messageStatistics[categoryId].totalMessagesDiscarded}</td>
                             <td>{messageStatistics[categoryId].avgMessageHandleDuration}</td>
-                            <td>{messageStatistics[categoryId].rescheduleRate}</td>
+                            <td>{messageStatistics[categoryId].rescheduleRate} %</td>
                         </tr>
                     ))}
                 </tbody>
