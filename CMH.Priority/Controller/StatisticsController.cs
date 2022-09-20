@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 
+using Newtonsoft.Json;
+
 using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
@@ -10,13 +12,15 @@ namespace CMH.Priority.Controller
     [Route("v1/[controller]")]
     public class StatisticsController : ControllerBase
     {
+        private readonly HttpClient _functionHttpClient;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
 
-        public StatisticsController(
+        public StatisticsController(IHttpClientFactory httpClientFactory,
             IMessageStatisticsRepository messageStatisticsRepository,
             IRuntimeStatisticsRepository runtimeStatisticsRepository)
         {
+            _functionHttpClient = httpClientFactory.CreateClient("Function");
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
         }
@@ -44,16 +48,35 @@ namespace CMH.Priority.Controller
 
         [HttpPut]
         [Route("messages/process/reset")]
-        public void ResetProcessMessagesStatistics()
+        public async Task ResetProcessMessagesStatistics()
         {
             _messageStatisticsRepository.ResetProcessMessagesStatistics();
+            await _functionHttpClient.PostAsync("statistics/reset", null);
         }
 
         [HttpGet]
         [Route("runtime")]
-        public RuntimeStatistics GetRuntimeStatistics()
+        public async Task<RuntimeStatistics> GetRuntimeStatistics()
         {
-            return _runtimeStatisticsRepository.GetRuntimeStatistics();
+            var result = await _functionHttpClient.GetAsync("statistics");
+            if (result.IsSuccessStatusCode)
+            {
+                var content = await result.Content.ReadAsStringAsync();
+                var functionRuntimeStatistics = JsonConvert.DeserializeObject<RuntimeStatistics>(content);
+                var runtimeStatistics = _runtimeStatisticsRepository.GetRuntimeStatistics();
+
+                runtimeStatistics.TotalMessagesProcessed = functionRuntimeStatistics?.TotalMessagesProcessed ?? 0;
+                runtimeStatistics.TotalProcessDuration = functionRuntimeStatistics?.TotalProcessDuration ?? 0;
+                runtimeStatistics.TotalMemoryUsage = functionRuntimeStatistics?.TotalMemoryUsage ?? 0;
+                runtimeStatistics.SessionStart = functionRuntimeStatistics?.SessionStart;
+                runtimeStatistics.SessionStop = functionRuntimeStatistics?.SessionStop;
+                runtimeStatistics.MaxParallellTasks = functionRuntimeStatistics?.MaxParallellTasks ?? 0;
+                runtimeStatistics.AvgParallellTasks = functionRuntimeStatistics?.AvgParallellTasks ?? 0;
+
+                return runtimeStatistics;
+            }
+
+            return new RuntimeStatistics();
         }
 
         [HttpPut]

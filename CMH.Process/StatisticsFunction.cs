@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Linq;
+using System;
+
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Azure.WebJobs;
@@ -11,18 +14,28 @@ namespace CMH.Process
 {
     public class StatisticsFunction
     {
-        [FunctionName("Statistics")]
-        public static IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req, ILogger log)
+        [FunctionName("GetStatistics")]
+        public static IActionResult GetStatistics([HttpTrigger(AuthorizationLevel.Function, "get", Route = "statistics")] HttpRequest req, ILogger log)
         {
-            return new OkObjectResult(new RuntimeStatistics()
+            var runtimeStatistics = new RuntimeStatistics()
             {
                 TotalMemoryUsage = RuntimeTracker.TotalMemoryUsage,
                 TotalMessagesProcessed = RuntimeTracker.TotalMessagesProcessed,
                 TotalProcessDuration = RuntimeTracker.TotalProcessDuration,
-                MaxParallellTasks = RuntimeTracker.MaxParallellTasks,
+                MaxParallellTasks = RuntimeTracker.ParallellTasks.Max(),
+                AvgParallellTasks = (short)Math.Round(RuntimeTracker.ParallellTasks.Average(_ => _), 0),
                 SessionStart = RuntimeTracker.SessionStart,
                 SessionStop = RuntimeTracker.SessionStop
-            });
+            };
+
+            return new OkObjectResult(runtimeStatistics);
+        }
+
+        [FunctionName("ResetStatistics")]
+        public static IActionResult ResetStatistics([HttpTrigger(AuthorizationLevel.Function, "post", Route = "statistics/reset")] HttpRequest req, ILogger log)
+        {
+            RuntimeTracker.Reset();
+            return new OkResult();
         }
     }
 }

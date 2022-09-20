@@ -27,6 +27,7 @@ const RuntimeStatisticsTable = ({ runtimeStatistics }) => {
                         <td>Tot. msg. processed</td>
                         <td>Avg. msg. through put (msg/s)</td>
                         <td>Max parallell task</td>
+                        <td>Avg. parallell task</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,6 +35,7 @@ const RuntimeStatisticsTable = ({ runtimeStatistics }) => {
                         <td>{runtimeStatistics.totalMessagesProcessed}</td>
                         <td>{runtimeStatistics.avgThroughPut}</td>
                         <td>{runtimeStatistics.maxParallellTasks}</td>
+                        <td>{runtimeStatistics.avgParallellTasks}</td>
                     </tr>
                 </tbody>
             </table>

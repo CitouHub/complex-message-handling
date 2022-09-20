@@ -13,7 +13,6 @@ export default {
             dataSourceId === undefined ? `` : `dataSourceId=${dataSourceId}`
         ]
         let query = params.filter(_ => _ !== '').length == 0 ? `` : `?${params.filter(_ => _ !== '').join('&')}`;
-        console.log(query, params, params.length);
 
         await Request.send({
             url: `/queue/send/${nbrOfMessages}${query}`,

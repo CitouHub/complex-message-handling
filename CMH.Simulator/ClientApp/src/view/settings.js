@@ -171,24 +171,12 @@ const Config = () => {
                         <TextField sx={{ width: '200px', paddingRight: '1rem' }}
                             id="c-bp-pcf-max-zise"
                             variant="outlined"
-                            label="Max size"
+                            label="Priority slots"
                             type="number"
-                            value={settings.backoffPolicy.processChannelFull.maxSize}
+                            value={settings.backoffPolicy.processChannelFull.prioritySlots}
                             onChange={e => {
                                 let updatedSettings = JSON.parse(JSON.stringify(settings));
-                                updatedSettings.backoffPolicy.processChannelFull.maxSize = e.target.value;
-                                setSettings(updatedSettings);
-                            }}
-                        />
-                        <TextField sx={{ width: '200px', paddingRight: '1rem' }}
-                            id="c-bp-pcf-priority-step-size"
-                            variant="outlined"
-                            label="Priority step size"
-                            type="number"
-                            value={settings.backoffPolicy.processChannelFull.priorityStepSize}
-                            onChange={e => {
-                                let updatedSettings = JSON.parse(JSON.stringify(settings));
-                                updatedSettings.backoffPolicy.processChannelFull.priorityStepSize = e.target.value;
+                                updatedSettings.backoffPolicy.processChannelFull.prioritySlots = e.target.value;
                                 setSettings(updatedSettings);
                             }}
                         />

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Http;
+using System.Threading;
 using System.Net.Http.Headers;
 
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
@@ -8,8 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CMH.Process;
 using CMH.Process.Service;
-using System.Net.Http;
-using System.Threading;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process

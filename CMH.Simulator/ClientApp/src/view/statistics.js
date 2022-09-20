@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import NotificationMessage from '../component/notification/snackbar.message';
+import LoadingButton from '@mui/lab/LoadingButton';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import MessageStatisticsTable from '../component/table/messagestatistics.table';
 import RuntimeStatisticsTable from '../component/table/runtimestatistics.table';
 
@@ -7,12 +8,14 @@ import StatisticsService from '../service/statistics.service';
 
 const Statistics = () => {
     const [loading, setLoading] = useState(true);
+    const [resetting, setResetting] = useState(false);
     const [priorityStatistics, setPriorityStatistics] = useState([]);
     const [processStatistics, setProcessStatistics] = useState([]);
     const [runtimeStatistics, setRuntimeStatistics] = useState({});
 
     useEffect(() => {
         updateStatistics();
+        refreshStatistics();
     }, []);
 
     const updateStatistics = () => {
@@ -28,6 +31,28 @@ const Statistics = () => {
         });
     }
 
+    const refreshStatistics = () => {
+        setTimeout(() => {
+            updateStatistics();
+            refreshStatistics();
+        }, 1000);
+    }
+
+    const reset = () => {
+        setResetting(true);
+        var resetPriorityStatistics = StatisticsService.resetPriorityStatistics();
+        var resetProcessStatistics = StatisticsService.resetProcessStatistics();
+        var resetRuntimeStatistics = StatisticsService.resetRuntimeStatistics();
+
+        Promise.all([resetPriorityStatistics, resetProcessStatistics, resetRuntimeStatistics]).then(() => {
+            setPriorityStatistics([]);
+            setProcessStatistics([]);
+            setRuntimeStatistics([]);
+            updateStatistics();
+            setResetting(false);
+        });
+    }
+
     return (
         <div>
             {loading && <p>Loading...</p>}
@@ -36,6 +61,14 @@ const Statistics = () => {
                     <MessageStatisticsTable title='Priority statistics' category='Priority' messageStatistics={priorityStatistics} />
                     <MessageStatisticsTable title='Process statistics' category='Process' messageStatistics={processStatistics} />
                     <RuntimeStatisticsTable runtimeStatistics={runtimeStatistics} />
+                    <LoadingButton
+                        loading={resetting}
+                        variant="contained"
+                        loadingPosition="start"
+                        startIcon={<RestartAltIcon />}
+                        onClick={reset}>
+                        {resetting === false ? 'Reset' : 'Resetting...'}
+                    </LoadingButton>
                 </React.Fragment>
             }
         </div>

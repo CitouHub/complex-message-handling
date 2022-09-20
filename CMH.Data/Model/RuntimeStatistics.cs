@@ -12,6 +12,7 @@ namespace CMH.Data.Model
         public double TotalProcessDuration { get; set; }
         public long TotalMemoryUsage { get; set; }
         public short MaxParallellTasks { get; set; }
+        public short AvgParallellTasks { get; set; }
         public DateTimeOffset? SessionStart { get; set; }
         public DateTimeOffset? SessionStop { get; set; }
 

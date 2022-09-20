@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json.Serialization;
+using System.Net.Http.Headers;
 
 using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Azure;
@@ -22,6 +23,12 @@ builder.Services.AddAzureClients(_ =>
     _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
 });
 
+builder.Services.AddHttpClient("Function", _ =>
+{
+    _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
+    _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
+
 builder.Services.AddMvc().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -36,7 +43,6 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddHostedService<MessageSeederService>();
 builder.Services.AddHostedService<PriorityService>();
 builder.Services.AddHostedService<QueueCacheService>();
 

@@ -54,15 +54,5 @@ namespace CMH.Process.Service
             var duration = (DateTimeOffset.UtcNow - enqueueTime).TotalMilliseconds;
             await _httpClient.PostAsync($"statistics/message/process/handled/{processChannel}/{processMessageStatus}/{Math.Round(duration)}", null);
         }
-
-        public async Task ProcessStartedAsync()
-        {
-            await _httpClient.PostAsync($"statistics/runtime/process/started", null);
-        }
-
-        public async Task ProcessFinishedAsync(double duration)
-        {
-            await _httpClient.PostAsync($"statistics/runtime/process/finished/{Math.Round(duration)}", null);
-        }
     }
 }
