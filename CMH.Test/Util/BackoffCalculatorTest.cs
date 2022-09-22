@@ -15,6 +15,7 @@ namespace CMH.Test.Util
         [InlineData(2, 2, 4, int.MaxValue, 16)]
         [InlineData(2, 2, 4, 15, 15)]
         [InlineData(-2, 2, 4, int.MaxValue, 0)]
+        [InlineData(1, 1.5, 10, int.MaxValue, 38)]
         public void CalculateIterationSleepTime(int initialSleepTime, double backoffFactor, int iterations, int maxSleepTime, int expectedSleepTime)
         {
             //Act

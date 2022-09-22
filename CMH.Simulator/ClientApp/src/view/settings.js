@@ -73,14 +73,26 @@ const Config = () => {
                     <h2>Priority</h2>
                     <div className="d-flex mb-4">
                         <TextField sx={{ width: '200px', paddingRight: '1rem' }}
-                            id="c-p-tasks"
+                            id="c-p-read-tasks"
                             variant="outlined"
-                            label="Tasks"
+                            label="Read tasks"
                             type="number"
-                            value={settings.priority.tasks}
+                            value={settings.priority.readTasks}
                             onChange={e => {
                                 let updatedSettings = JSON.parse(JSON.stringify(settings));
-                                updatedSettings.priority.tasks = e.target.value;
+                                updatedSettings.priority.readTasks = e.target.value;
+                                setSettings(updatedSettings);
+                            }}
+                        />
+                        <TextField sx={{ width: '200px', paddingRight: '1rem' }}
+                            id="c-p-write-tasks"
+                            variant="outlined"
+                            label="Write tasks"
+                            type="number"
+                            value={settings.priority.writeTasks}
+                            onChange={e => {
+                                let updatedSettings = JSON.parse(JSON.stringify(settings));
+                                updatedSettings.priority.writeTasks = e.target.value;
                                 setSettings(updatedSettings);
                             }}
                         />

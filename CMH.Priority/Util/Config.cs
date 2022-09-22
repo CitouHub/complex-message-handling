@@ -44,16 +44,29 @@ namespace CMH.Priority.Util
 
         public class PriorityClass
         {
-            private short? _Tasks;
-            public short Tasks
+            private short? _ReadTasks;
+            public short ReadTasks
             {
                 get
                 {
-                    return _Tasks ?? _configuration.GetValue<short>("Priority:Tasks");
+                    return _ReadTasks ?? _configuration.GetValue<short>("Priority:ReadTasks");
                 }
                 set
                 {
-                    _Tasks = value;
+                    _ReadTasks = value;
+                }
+            }
+
+            private short? _WriteTasks;
+            public short WriteTasks
+            {
+                get
+                {
+                    return _WriteTasks ?? _configuration.GetValue<short>("Priority:WriteTasks");
+                }
+                set
+                {
+                    _WriteTasks = value;
                 }
             }
 

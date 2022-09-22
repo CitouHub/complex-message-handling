@@ -4,6 +4,9 @@
     {
         public static int CalculateIterationSleepTime(int initialSleepTime, double backoffFactor, int iterations, int maxSleepTime)
         {
+            //To make sure there is no overflow
+            iterations = iterations > 100 ? 100 : iterations;
+
             var sleepTime = (int)Math.Round(initialSleepTime * Math.Pow(backoffFactor, Math.Max(iterations - 1, 0)), 0);
             return HandleNegative(sleepTime <= maxSleepTime ? sleepTime : maxSleepTime);
         }
