@@ -35,13 +35,29 @@ namespace CMH.Priority.Controller
         }
 
         [HttpPost]
+        [Route("reset")]
+        public async Task ResetQueues()
+        {
+            var queues = _serviceBusAdministrationClient.GetQueueNamesAsync("").Result;
+
+            foreach (var queue in queues)
+            {
+                await _serviceBusAdministrationClient.DeleteQueueAsync(queue);
+                await _serviceBusAdministrationClient.CreateQueueAsync(queue);
+            }
+        }
+
+        [HttpPost]
         [Route("send/{nbrOfMessages}")]
         public async Task SendMessages(int nbrOfMessages, string? queueName, short? dataSourceId)
         {
             var maxMessageBatch = 500;
+            var maxParallellWriteTasks = 10;
+
             var random = new Random();
             var priorityQueues = await _serviceBusAdministrationClient.GetQueueNamesAsync(Queue.PriorityQueuePrefix);
             var dataSources = _dataSourceRepository.GetAll();
+            var tasks = new List<Task>();
 
             while (nbrOfMessages > 0)
             {
@@ -56,9 +72,18 @@ namespace CMH.Priority.Controller
 
                 var priorityQueue = priorityQueues.FirstOrDefault(_ => _ == queueName) ?? priorityQueues[random.Next(priorityQueues.Count)];
                 var sender = _serviceBusClient.CreateSender(priorityQueue);
-                await sender.SendMessagesAsync(messages);
                 nbrOfMessages -= messages.Count;
+
+                var task = sender.SendMessagesAsync(messages);
+                tasks.Add(task);
+
+                while(tasks.Count(_ => _.IsCompleted == false) >= maxParallellWriteTasks)
+                {
+                    Task.WaitAny(tasks.ToArray());
+                }
             }
+
+            Task.WaitAll(tasks.ToArray());
         }
     }
 }

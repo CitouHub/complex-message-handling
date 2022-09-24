@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Test", "CMH.Test\CMH.Te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Data", "CMH.Data\CMH.Data.csproj", "{A916279A-969E-4525-8E0B-79E5B77197FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CMH.Simulator", "CMH.Simulator\CMH.Simulator.csproj", "{080C4469-2506-49B2-8BCF-15661922CF31}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMH.Simulator", "CMH.Simulator\CMH.Simulator.csproj", "{080C4469-2506-49B2-8BCF-15661922CF31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

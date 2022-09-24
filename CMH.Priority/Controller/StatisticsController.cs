@@ -51,14 +51,16 @@ namespace CMH.Priority.Controller
         public async Task ResetProcessMessagesStatistics()
         {
             _messageStatisticsRepository.ResetProcessMessagesStatistics();
-            await _functionHttpClient.PostAsync("statistics/reset", null);
+            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.AbsolutePath ?? "", "statistics/reset"));
+            await _functionHttpClient.PostAsync("", null);
         }
 
         [HttpGet]
         [Route("runtime")]
         public async Task<RuntimeStatistics> GetRuntimeStatistics()
         {
-            var result = await _functionHttpClient.GetAsync("statistics");
+            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics"));
+            var result = await _functionHttpClient.GetAsync("");
             if (result.IsSuccessStatusCode)
             {
                 var content = await result.Content.ReadAsStringAsync();
