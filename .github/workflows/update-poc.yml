@@ -127,10 +127,10 @@ jobs:
           files: ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
           dest: ${{env.DOTNET_ROOT}}/${{ env.SERVICE_PROJECT_NAME }}.zip
 
-      - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}
+      - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}.zip
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.SIMULATOR_PROJECT_NAME}}
+          name: ${{env.SIMULATOR_PROJECT_NAME}}.zip
           path: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}.zip
 
   deploy-service:
@@ -189,7 +189,7 @@ jobs:
       - name: Download ${{env.SIMULATOR_PROJECT_NAME}}.zip
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.SIMULATOR_PROJECT_NAME}}
+          name: ${{env.SIMULATOR_PROJECT_NAME}}.zip
 
       - name: Deploy to Azure App service ${{ env.SIMULATOR_NAME }}
         id: deploy-simulator
