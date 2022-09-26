@@ -13,68 +13,78 @@ using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
 using CMH.Common.Extenstion;
+using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddAzureClients(_ =>
+try
 {
-    _.AddServiceBusClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
-    _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
-});
+    // Add services to the container.
+    builder.Services.AddAzureClients(_ =>
+    {
+        _.AddServiceBusClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
+        _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
+    });
 
-builder.Services.AddHttpClient("Function", _ =>
+    builder.Services.AddHttpClient("Function", _ =>
+    {
+        _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
+        _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    });
+
+    builder.Services.AddMvc().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
+    builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+    builder.Services.AddControllers().AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+
+    builder.Services.AddHostedService<PriorityService>();
+    builder.Services.AddHostedService<QueueCacheService>();
+
+    builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
+    builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
+    builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
+    builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
+    builder.Services.AddSingleton<IQueueCache, QueueCache>();
+    builder.Services.AddSingleton<Config>();
+
+    var app = builder.Build();
+
+    InitiateQueues(app, builder.Configuration);
+    InitiateDataSources(app, builder.Configuration);
+    InitiateProcessChannelPolicies(app, builder.Configuration);
+
+    // Configure the HTTP request pipeline.
+    app.UseSwagger();
+    app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
+
+    app.UseCors(builder => builder
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader());
+
+    app.UseHttpsRedirection();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    Trace.TraceInformation("Application starting!");
+
+    app.Run();
+} 
+catch (Exception e)
 {
-    _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
-    _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-});
-
-builder.Services.AddMvc().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-});
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-builder.Services.AddControllers().AddJsonOptions(options =>
-{
-    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddHostedService<PriorityService>();
-builder.Services.AddHostedService<QueueCacheService>();
-
-builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
-builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
-builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
-builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
-builder.Services.AddSingleton<IQueueCache, QueueCache>();
-builder.Services.AddSingleton<Config>();
-
-var app = builder.Build();
-
-InitiateQueues(app, builder.Configuration);
-InitiateDataSources(app, builder.Configuration);
-InitiateProcessChannelPolicies(app, builder.Configuration);
-
-// Configure the HTTP request pipeline.
-app.UseSwagger();
-app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
-
-app.UseCors(builder => builder
-    .AllowAnyOrigin()
-    .AllowAnyMethod()
-    .AllowAnyHeader());
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+    Trace.TraceError("Startup exception", e);
+}
 
 static void InitiateQueues(WebApplication app, ConfigurationManager configuration)
 {
