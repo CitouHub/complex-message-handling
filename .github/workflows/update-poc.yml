@@ -189,6 +189,6 @@ jobs:
         id: deploy-simulator
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ env.SIMULATE_NAME }}
+          app-name: ${{ env.SIMULATOR_NAME }}
           publish-profile: ${{ secrets.AZURE_SIMULATOR_PUBLISH_PROFILE }}
           package: .
