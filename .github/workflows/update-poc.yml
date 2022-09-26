@@ -6,6 +6,7 @@ env:
   AZURE_SIMULATE_NAME: as-cmh-simulate
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   DOTNET_VERSION: '6.0'
+  CI: false
 
 on:
   push:
@@ -39,6 +40,7 @@ jobs:
 
       - name: dotnet publish
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - run: CI=false
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
