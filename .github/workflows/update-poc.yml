@@ -8,6 +8,7 @@ env:
   PROCESS_NAME: af-cmh-process
   SIMULATOR_NAME: as-cmh-simulator
   DOTNET_VERSION: '6.0'
+  CI: false
 
 on:
   push:
