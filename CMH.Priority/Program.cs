@@ -60,11 +60,8 @@ InitiateDataSources(app, builder.Configuration);
 InitiateProcessChannelPolicies(app, builder.Configuration);
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
-}
+app.UseSwagger();
+app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
 
 app.UseCors(builder => builder
     .AllowAnyOrigin()
