@@ -1,4 +1,4 @@
-name: Update POC
+name: Update CMH POC
 
 env:
   SERVICE_PROJECT_NAME: CMH.Priority
@@ -28,7 +28,7 @@ jobs:
   build-service:
     runs-on: ubuntu-latest
     needs: unit-test
-    name: Build service
+    name: Build Service
 
     steps:
       - uses: AutoModality/action-clean@v1
@@ -62,7 +62,7 @@ jobs:
   build-process:
     runs-on: ubuntu-latest
     needs: unit-test
-    name: Build process
+    name: Build Process
 
     steps:
       - uses: AutoModality/action-clean@v1
@@ -96,7 +96,7 @@ jobs:
   build-simulator:
     runs-on: ubuntu-latest
     needs: unit-test
-    name: Build simulator
+    name: Build Simulator
 
     steps:
       - uses: AutoModality/action-clean@v1
@@ -130,10 +130,10 @@ jobs:
   deploy-service:
     runs-on: ubuntu-latest
     needs: build-service
-    name: Deploy service
+    name: Deploy Service
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ steps.deploy-service.outputs.webapp-url }}
 
     steps:
       - name: Download ${{env.SERVICE_PROJECT_NAME}}
@@ -142,7 +142,7 @@ jobs:
           name: ${{env.SERVICE_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.SERVICE_NAME }}
-        id: deploy-to-service
+        id: deploy-service
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.SERVICE_NAME }}
@@ -152,10 +152,10 @@ jobs:
   deploy-process:
     runs-on: ubuntu-latest
     needs: build-process
-    name: Deploy process
+    name: Deploy Process
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ steps.deploy-process.outputs.webapp-url }}
 
     steps:
       - name: Download ${{env.PROCESS_PROJECT_NAME}}
@@ -164,7 +164,7 @@ jobs:
           name: ${{env.PROCESS_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.PROCESS_NAME }}
-        id: deploy-to-service
+        id: deploy-process
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.PROCESS_NAME }}
@@ -174,10 +174,10 @@ jobs:
   deploy-simulate:
     runs-on: ubuntu-latest
     needs: build-simulator
-    name: Deploy simulator
+    name: Deploy Simulator
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+      url: ${{ steps.deploy-simulator.outputs.webapp-url }}
 
     steps:
       - name: Download ${{env.SIMULATOR_PROJECT_NAME}}
@@ -186,7 +186,7 @@ jobs:
           name: ${{env.PSIMULATE_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.SIMULATOR_NAME }}
-        id: deploy-to-service
+        id: deploy-simulator
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.SIMULATE_NAME }}
