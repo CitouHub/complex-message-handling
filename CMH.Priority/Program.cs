@@ -13,10 +13,10 @@ using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
 using CMH.Common.Extenstion;
-using System.Diagnostics;
+using Microsoft.ApplicationInsights;
 
 var builder = WebApplication.CreateBuilder(args);
-
+WebApplication app = null;
 try
 {
     // Add services to the container.
@@ -30,6 +30,11 @@ try
     {
         _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
         _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+    });
+
+    builder.Services.AddApplicationInsightsTelemetry(option =>
+    {
+        option.ConnectionString = builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY");
     });
 
     builder.Services.AddMvc().AddJsonOptions(options =>
@@ -56,9 +61,11 @@ try
     builder.Services.AddSingleton<IQueueCache, QueueCache>();
     builder.Services.AddSingleton<Config>();
 
-    var app = builder.Build();
+    app = builder.Build();
 
-    InitiateQueues(app, builder.Configuration);
+    StartUpTrace(app, "Build!");
+
+    InitiateQueues(builder.Configuration);
     InitiateDataSources(app, builder.Configuration);
     InitiateProcessChannelPolicies(app, builder.Configuration);
 
@@ -77,18 +84,32 @@ try
 
     app.MapControllers();
 
-    Trace.TraceInformation("Application starting!");
+    StartUpTrace(app, "Started!");
 
     app.Run();
 } 
 catch (Exception e)
 {
-    Trace.TraceError("Startup exception", e);
+    StartUpTrace(app, $"Exception {e.Message} {e.StackTrace}");
 }
 
-static void InitiateQueues(WebApplication app, ConfigurationManager configuration)
+void StartUpTrace(WebApplication? app, string message)
 {
-    using var scope = app.Services.CreateScope();
+    if(app == null)
+    {
+        using var scope = app.Services.CreateScope();
+        var telemetryClient = scope.ServiceProvider.GetRequiredService<TelemetryClient>();
+        telemetryClient.TrackTrace(message);
+    } 
+    else
+    {
+
+    }
+    
+}
+
+static void InitiateQueues(ConfigurationManager configuration)
+{
     var connectionString = configuration.GetValue<string>("ServiceBus:ConnectionString");
     var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
     var queues = serviceBusAdministrationClient.GetQueueNamesAsync("").Result;
