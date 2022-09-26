@@ -18,7 +18,7 @@ const Statistics = () => {
             updateStatistics();
             refreshStatistics();
         }, 1000);
-    });
+    }, []);
 
     useEffect(() => {
         updateStatistics();
