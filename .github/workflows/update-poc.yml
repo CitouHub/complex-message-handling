@@ -183,7 +183,7 @@ jobs:
       - name: Download ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.PSIMULATE_PROJECT_NAME}}
+          name: ${{env.SIMULATOR_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.SIMULATOR_NAME }}
         id: deploy-simulator
