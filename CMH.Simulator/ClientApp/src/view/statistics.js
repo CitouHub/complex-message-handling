@@ -13,12 +13,12 @@ const Statistics = () => {
     const [processStatistics, setProcessStatistics] = useState([]);
     const [runtimeStatistics, setRuntimeStatistics] = useState({});
 
-    const refreshStatistics = () => {
+    const refreshStatistics = useCallback(() => {
         setTimeout(() => {
             updateStatistics();
             refreshStatistics();
         }, 1000);
-    }
+    });
 
     useEffect(() => {
         updateStatistics();
