@@ -1,6 +1,6 @@
 import axios from "axios"
 
-export default {
+const appSettingsService = {
     get: async () => {
         try {
             let result = await axios.get('/api/AppSettings');
@@ -10,3 +10,5 @@ export default {
         }
     }
 }
+
+export default appSettingsService;
