@@ -18,7 +18,7 @@ export default {
             queueName === undefined || queueName === '' ? `` : `queueName=${queueName}`,
             dataSourceId === undefined ? `` : `dataSourceId=${dataSourceId}`
         ]
-        let query = params.filter(_ => _ !== '').length == 0 ? `` : `?${params.filter(_ => _ !== '').join('&')}`;
+        let query = params.filter(_ => _ !== '').length === 0 ? `` : `?${params.filter(_ => _ !== '').join('&')}`;
 
         await Request.send({
             url: `/queue/send/${nbrOfMessages}${query}`,

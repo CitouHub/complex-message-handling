@@ -16,7 +16,7 @@ const Statistics = () => {
     useEffect(() => {
         updateStatistics();
         refreshStatistics();
-    }, []);
+    }, [refreshStatistics]);
 
     const updateStatistics = () => {
         var getPriorityStatistics = StatisticsService.getPriorityStatistics();
