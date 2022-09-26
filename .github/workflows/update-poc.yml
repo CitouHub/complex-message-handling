@@ -6,6 +6,7 @@ env:
   AZURE_SIMULATE_NAME: as-cmh-simulate
   AZURE_WEBAPP_PACKAGE_PATH: '.'
   DOTNET_VERSION: '6.0'
+  CI: false
 
 on:
   push:
