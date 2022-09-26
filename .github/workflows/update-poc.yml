@@ -120,6 +120,9 @@ jobs:
 
       - name: Publish ${{env.SIMULATOR_PROJECT_NAME}}
         run: dotnet publish ${{env.SIMULATOR_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
+        
+      - name: Zip artifact for deployment
+        run: zip release.zip ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}/* -r
 
       - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/upload-artifact@v3
