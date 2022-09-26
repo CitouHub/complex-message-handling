@@ -124,7 +124,7 @@ jobs:
       - name: Create Zip File
         uses: papeloto/action-zip@v1
         with:
-          files: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}/*.*
+          files: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}/
           dest: ${{env.DOTNET_ROOT}}/${{ env.SIMULATOR_PROJECT_NAME }}.zip
 
       - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}.zip
