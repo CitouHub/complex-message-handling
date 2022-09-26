@@ -8,6 +8,10 @@ env:
   DOTNET_VERSION: '6.0'
 
 on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
