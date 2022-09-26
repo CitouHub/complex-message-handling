@@ -8,7 +8,7 @@ using Xunit;
 using CMH.Data.Repository;
 using CMH.Priority.Infrastructure;
 using CMH.Priority.Service;
-using CMH.Test.Helper;
+using CMH.Priority.Util;
 
 namespace CMH.Test.Service
 {
@@ -35,7 +35,7 @@ namespace CMH.Test.Service
         public void GetAvailableProcessChannelSpots(long messageCount, short priorityIndex, short totalPriorities, short prioritySlots, int expectedAvailableSlots)
         {
             //Setup
-            var priorityService = new PriorityService(ConfigHelper.GetConfig(), _logger, 
+            var priorityService = new PriorityService(new Config(), _logger, 
                 new ServiceBusClient(MockConnectionString), new ServiceBusAdministrationClient(MockConnectionString),
                 _queueCache, _messageStatisticsRepository, _runtimeStatisticsRepository, _dataSourceRepository);
 

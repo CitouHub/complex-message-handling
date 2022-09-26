@@ -33,7 +33,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _RefreshInterval ?? _configuration.GetValue<int>("QueueCache:RefreshInterval");
+                    return _configuration != null ? (_RefreshInterval ?? _configuration.GetValue<int>("QueueCache:RefreshInterval")) : 0;
                 }
                 set
                 {
@@ -49,7 +49,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _ReadTasks ?? _configuration.GetValue<short>("Priority:ReadTasks");
+                    return _configuration != null ? (_ReadTasks ?? _configuration.GetValue<short>("Priority:ReadTasks")) : (short)1;
                 }
                 set
                 {
@@ -62,7 +62,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _WriteTasks ?? _configuration.GetValue<short>("Priority:WriteTasks");
+                    return _configuration != null ? (_WriteTasks ?? _configuration.GetValue<short>("Priority:WriteTasks")) : (short)1;
                 }
                 set
                 {
@@ -75,7 +75,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _MessageBatch ?? _configuration.GetValue<short>("Priority:MessageBatch");
+                    return _configuration != null ? (_MessageBatch ?? _configuration.GetValue<short>("Priority:MessageBatch")) : (short)0;
                 }
                 set
                 {
@@ -88,7 +88,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _MessageFetchTimeOut ?? _configuration.GetValue<short>("Priority:MessageFetchTimeOut");
+                    return _configuration != null ? (_MessageFetchTimeOut ?? _configuration.GetValue<short>("Priority:MessageFetchTimeOut")) : (short)0;
                 }
                 set
                 {
@@ -102,7 +102,7 @@ namespace CMH.Priority.Util
             {
                 get
                 {
-                    return _DefaultProcessChannel ?? Enum.Parse<ProcessChannel>(_configuration.GetValue<string>("Priority:DefaultProcessChannel"));
+                    return _configuration != null ? (_DefaultProcessChannel ?? Enum.Parse<ProcessChannel>(_configuration.GetValue<string>("Priority:DefaultProcessChannel"))) : ProcessChannel.Default;
                 }
                 set
                 {
@@ -124,7 +124,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:InitialSleepTime");
+                        return _configuration != null ? (_InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:InitialSleepTime")) : 0;
                     }
                     set
                     {
@@ -137,7 +137,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _BackoffFactor ?? _configuration.GetValue<double>("BackoffPolicy:EmptyIteration:BackoffFactor");
+                        return _configuration != null ? (_BackoffFactor ?? _configuration.GetValue<double>("BackoffPolicy:EmptyIteration:BackoffFactor")) : 0;
                     }
                     set
                     {
@@ -150,7 +150,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:MaxSleepTime");
+                        return _configuration != null ? (_MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:EmptyIteration:MaxSleepTime")) : 0;
                     }
                     set
                     {
@@ -166,7 +166,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _PrioritySlots ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PrioritySlots");
+                        return _configuration != null ? (_PrioritySlots ?? _configuration.GetValue<short>("BackoffPolicy:ProcessChannelFull:PrioritySlots")) : (short)0;
                     }
                     set
                     {
@@ -179,7 +179,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:InitialSleepTime");
+                        return _configuration != null ? (_InitialSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:InitialSleepTime")) : 0;
                     }
                     set
                     {
@@ -192,7 +192,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _PriorityFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:PriorityFactor");
+                        return _configuration != null ? (_PriorityFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:PriorityFactor")) : 0;
                     }
                     set
                     {
@@ -205,7 +205,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _TryFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:TryFactor");
+                        return _configuration != null ? (_TryFactor ?? _configuration.GetValue<double>("BackoffPolicy:ProcessChannelFull:TryFactor")) : 0;
                     }
                     set
                     {
@@ -218,7 +218,7 @@ namespace CMH.Priority.Util
                 {
                     get
                     {
-                        return _MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:MaxSleepTime");
+                        return _configuration != null ? (_MaxSleepTime ?? _configuration.GetValue<int>("BackoffPolicy:ProcessChannelFull:MaxSleepTime")) : 0;
                     }
                     set
                     {

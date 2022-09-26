@@ -27,4 +27,8 @@
     <ProjectReference Include="..\CMH.Priority\CMH.Priority.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Helper\" />
+  </ItemGroup>
+
 </Project>
