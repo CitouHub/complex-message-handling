@@ -1,4 +1,4 @@
-name: Release
+name: Test
 
 env:
   SERVICE_PROJECT_NAME: CMH.Priority
@@ -8,9 +8,6 @@ env:
   PROCESS_NAME: af-cmh-process
   SIMULATE_NAME: as-cmh-simulate
   DOTNET_VERSION: '6.0'
-  RELEASE_TAG_INPUT: ${{ github.event.release.tag_name }}
-  BUILD_ID: ${{ github.run_number }}
-  COMMIT_ID: ${{ github.sha }}
   CI: false
 
 on:
@@ -54,7 +51,7 @@ jobs:
         run: dotnet build ${{env.SERVICE_PROJECT_NAME}} -c Release 
 
       - name: Publish ${{env.SERVICE_PROJECT_NAME}}
-        run: dotnet publish ${{env.SERVICE_PROJECT_NAME}} -c Release -p:CommitId=$COMMIT_ID -p:BuildId=$BUILD_ID -p:BuildTag=$RELEASE_TAG_INPUT -o ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
+        run: dotnet publish ${{env.SERVICE_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
 
       - name: Upload ${{env.SERVICE_PROJECT_NAME}}
         uses: actions/upload-artifact@v3
