@@ -167,7 +167,7 @@ jobs:
       - name: Download ${{env.PROCESS_PROJECT_NAME}}
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.PROCESS_PROJECT_NAME}}.zip
+          name: ${{env.PROCESS_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.PROCESS_NAME }}
         id: deploy-process
@@ -186,7 +186,7 @@ jobs:
       url: ${{ steps.deploy-simulator.outputs.webapp-url }}
 
     steps:
-      - name: Download ${{env.SIMULATOR_PROJECT_NAME}}
+      - name: Download ${{env.SIMULATOR_PROJECT_NAME}}.zip
         uses: actions/download-artifact@v3
         with:
           name: ${{env.SIMULATOR_PROJECT_NAME}}
