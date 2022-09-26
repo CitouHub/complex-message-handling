@@ -1,6 +1,6 @@
 import Request from "../util/requesthandler"
 
-export default {
+const settingsService = {
     getSettings: async () => await Request.send({
         url: `/config`,
         method: 'GET'
@@ -21,3 +21,5 @@ export default {
         return Request.handleResponse(response)
     })
 }
+
+export default settingsService;

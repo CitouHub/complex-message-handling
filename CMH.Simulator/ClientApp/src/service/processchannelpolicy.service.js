@@ -1,6 +1,6 @@
 import Request from "../util/requesthandler"
 
-export default {
+const processChannelPolicyService = {
     getProcessChannelPolicies: async () => await Request.send({
         url: `/processchannelpolicy`,
         method: 'GET'
@@ -15,3 +15,5 @@ export default {
         return Request.handleResponse(response)
     }),
 }
+
+export default processChannelPolicyService;

@@ -1,6 +1,7 @@
 import Request from "../util/requesthandler"
+import settingsService from "./settings.service"
 
-export default {
+const statisticsService = {
     getPriorityStatistics: async () => await Request.send({
         url: `/statistics/messages/priority`,
         method: 'GET'
@@ -38,3 +39,5 @@ export default {
         return Request.handleResponse(response)
     })
 }
+
+export default settingsService;

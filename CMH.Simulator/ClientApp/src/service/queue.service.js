@@ -1,6 +1,6 @@
 import Request from "../util/requesthandler"
 
-export default {
+const queueService = {
     getQueueNames: async (queuePrefix) => await Request.send({
         url: `/queue/${queuePrefix}/`,
         method: 'GET'
@@ -28,3 +28,5 @@ export default {
         })
     }
 }
+
+export default queueService;

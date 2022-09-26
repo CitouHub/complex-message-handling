@@ -1,6 +1,6 @@
 import Request from "../util/requesthandler"
 
-export default {
+const dataSourceService = {
     getDataSources: async () => await Request.send({
         url: `/datasource`,
         method: 'GET'
@@ -33,3 +33,5 @@ export default {
         return Request.handleResponse(response)
     }),
 }
+
+export default dataSourceService;
