@@ -1,4 +1,4 @@
-﻿export default {
+export default {
     setApplicationSettings: (appSettings) => {
         localStorage.setItem('appSettings', JSON.stringify(appSettings));
     },

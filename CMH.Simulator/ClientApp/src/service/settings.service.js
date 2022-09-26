@@ -1,4 +1,4 @@
-﻿import Request from "../util/requesthandler"
+import Request from "../util/requesthandler"
 
 export default {
     getSettings: async () => await Request.send({

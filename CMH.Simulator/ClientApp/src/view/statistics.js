@@ -13,6 +13,13 @@ const Statistics = () => {
     const [processStatistics, setProcessStatistics] = useState([]);
     const [runtimeStatistics, setRuntimeStatistics] = useState({});
 
+    const refreshStatistics = () => {
+        setTimeout(() => {
+            updateStatistics();
+            refreshStatistics();
+        }, 1000);
+    }
+
     useEffect(() => {
         updateStatistics();
         refreshStatistics();
@@ -29,13 +36,6 @@ const Statistics = () => {
             setRuntimeStatistics(result[2]);
             setLoading(false);
         });
-    }
-
-    const refreshStatistics = () => {
-        setTimeout(() => {
-            updateStatistics();
-            refreshStatistics();
-        }, 1000);
     }
 
     const reset = () => {

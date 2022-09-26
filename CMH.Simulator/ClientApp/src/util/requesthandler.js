@@ -1,4 +1,4 @@
-﻿import axios from "axios"
+import axios from "axios"
 import Config from "./config"
 
 axios.interceptors.response.use(response => {

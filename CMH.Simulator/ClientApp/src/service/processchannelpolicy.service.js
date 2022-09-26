@@ -1,4 +1,4 @@
-﻿import Request from "../util/requesthandler"
+import Request from "../util/requesthandler"
 
 export default {
     getProcessChannelPolicies: async () => await Request.send({
