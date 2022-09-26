@@ -1,0 +1,82 @@
+name: Update CMH Poc
+
+env:
+  AZURE_SERVICE_NAME: as-cmh-service
+  AZURE_PROCESS_NAME: af-cmh-process
+  AZURE_SIMULATE_NAME: as-cmh-simulate
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  DOTNET_VERSION: '6.0'
+  CI: false
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET 6.0
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Set up dependency caching for faster builds
+        uses: actions/cache@v2
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - run: CI=false
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: 'Development'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: .net-app
+
+      - name: Deploy CMH Service
+        id: deploy-to-as-cmh-service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_SERVICE_NAME }}
+          publish-profile: ${{ secrets.AZURE_SERVICE_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          
+      - name: Deploy CMH Process
+        id: deploy-to-af-cmh-process
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_PROCESS_NAME }}
+          publish-profile: ${{ secrets.AZURE_PROCESS_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          
+      - name: Deploy CMH Simulate
+        id: deploy-to-as-cmh-simulate
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_SIMULATE_NAME }}
+          publish-profile: ${{ secrets.AZURE_SIMULATE_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}

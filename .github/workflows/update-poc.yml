@@ -1,10 +1,12 @@
-name: Update CMH Poc
+name: Test
 
 env:
-  AZURE_SERVICE_NAME: as-cmh-service
-  AZURE_PROCESS_NAME: af-cmh-process
-  AZURE_SIMULATE_NAME: as-cmh-simulate
-  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  SERVICE_PROJECT_NAME: CMH.Priority
+  PROCESS_PROJECT_NAME: CMH.Process
+  SIMULATE_PROJECT_NAME: CMH.Simulate
+  SERVICE_NAME: as-cmh-service
+  PROCESS_NAME: af-cmh-process
+  SIMULATE_NAME: as-cmh-simulate
   DOTNET_VERSION: '6.0'
   CI: false
 
@@ -16,71 +18,65 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  unit-test:
     runs-on: ubuntu-latest
+    name: Unit Testing
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - run: dotnet test
+          
+  build-service:
+    runs-on: ubuntu-latest
+    needs: unit-test
+    name: Build service
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: AutoModality/action-clean@v1
+      - uses: actions/checkout@v3
 
-      - name: Set up .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Set up .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v2
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
       
       - name: Set up dependency caching for faster builds
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Build ${{env.SERVICE_PROJECT_NAME}}
+        run: dotnet build ${{env.SERVICE_PROJECT_NAME}} -c Release 
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-      - run: CI=false
+      - name: Publish ${{env.SERVICE_PROJECT_NAME}}
+        run: dotnet publish ${{env.SERVICE_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
+      - name: Upload ${{env.SERVICE_PROJECT_NAME}}
+        uses: actions/upload-artifact@v3
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: ${{env.SERVICE_PROJECT_NAME}}
+          path: ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
 
-  deploy:
+  deploy-service:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-service
+    name: Deploy service
     environment:
-      name: 'Development'
+      name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v2
+      - name: Download ${{env.SERVICE_PROJECT_NAME}}
+        uses: actions/download-artifact@v3
         with:
-          name: .net-app
+          name: ${{env.SERVICE_PROJECT_NAME}}
 
-      - name: Deploy CMH Service
-        id: deploy-to-as-cmh-service
+      - name: Deploy to Azure App service ${{ env.SERVICE_NAME }}
+        id: deploy-to-service
         uses: azure/webapps-deploy@v2
         with:
-          app-name: ${{ env.AZURE_SERVICE_NAME }}
+          app-name: ${{ env.SERVICE_NAME }}
           publish-profile: ${{ secrets.AZURE_SERVICE_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-          
-      - name: Deploy CMH Process
-        id: deploy-to-af-cmh-process
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_PROCESS_NAME }}
-          publish-profile: ${{ secrets.AZURE_PROCESS_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-          
-      - name: Deploy CMH Simulate
-        id: deploy-to-as-cmh-simulate
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_SIMULATE_NAME }}
-          publish-profile: ${{ secrets.AZURE_SIMULATE_PUBLISH_PROFILE }}
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          package: .
