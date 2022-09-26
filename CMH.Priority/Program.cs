@@ -13,100 +13,68 @@ using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
 using CMH.Common.Extenstion;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.ApplicationInsights.DataContracts;
 
 var builder = WebApplication.CreateBuilder(args);
-var telemetryConfiguration = new TelemetryConfiguration
+
+// Add services to the container.
+builder.Services.AddAzureClients(_ =>
 {
-    ConnectionString = String.Format(
-    $"{builder.Configuration.GetValue<string>("APPINSIGHTS_CONNECTIONSTRING")}",
-    builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY"))
-};
-var telemetryClient = new TelemetryClient(telemetryConfiguration);
-try
+    _.AddServiceBusClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
+    _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
+});
+
+builder.Services.AddHttpClient("Function", _ =>
 {
-    // Add services to the container.
-    telemetryClient.TrackTrace("AddAzureClients", SeverityLevel.Information);
-    builder.Services.AddAzureClients(_ =>
-    {
-        _.AddServiceBusClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
-        _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
-    });
+    _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
+    _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+});
 
-    telemetryClient.TrackTrace("AddHttpClient", SeverityLevel.Information);
-    builder.Services.AddHttpClient("Function", _ =>
-    {
-        _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
-        _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-    });
-
-    telemetryClient.TrackTrace("AddApplicationInsightsTelemetry", SeverityLevel.Information);
-    builder.Services.AddApplicationInsightsTelemetry(option =>
-    {
-        option.ConnectionString = builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY");
-    });
-
-    telemetryClient.TrackTrace("AddMvcRoutingControllerEct", SeverityLevel.Information);
-    builder.Services.AddMvc().AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    });
-    builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-    builder.Services.AddControllers().AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
-
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
-
-    telemetryClient.TrackTrace("AddServices", SeverityLevel.Information);
-    builder.Services.AddHostedService<PriorityService>();
-    builder.Services.AddHostedService<QueueCacheService>();
-
-    builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
-    builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
-    builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
-    builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
-    builder.Services.AddSingleton<IQueueCache, QueueCache>();
-    builder.Services.AddSingleton<Config>();
-
-    telemetryClient.TrackTrace("Build", SeverityLevel.Information);
-    var app = builder.Build();
-
-    telemetryClient.TrackTrace("InitiateQueues", SeverityLevel.Information);
-    InitiateQueues(builder.Configuration);
-    telemetryClient.TrackTrace("InitiateDataSources", SeverityLevel.Information);
-    InitiateDataSources(app, builder.Configuration);
-    telemetryClient.TrackTrace("InitiateProcessChannelPolicies", SeverityLevel.Information);
-    InitiateProcessChannelPolicies(app, builder.Configuration);
-
-    // Configure the HTTP request pipeline.
-    telemetryClient.TrackTrace("Configure the HTTP request pipeline", SeverityLevel.Information);
-    app.UseSwagger();
-    app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
-
-    app.UseCors(builder => builder
-        .AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader());
-
-    app.UseHttpsRedirection();
-
-    app.UseAuthorization();
-
-    app.MapControllers();
-
-    telemetryClient.TrackTrace("Run", SeverityLevel.Information);
-    app.Run();
-} 
-catch (Exception e)
+builder.Services.AddMvc().AddJsonOptions(options =>
 {
-    telemetryClient.TrackTrace($"Exception {e.Message} {e.StackTrace}", SeverityLevel.Error);
-}
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddHostedService<PriorityService>();
+builder.Services.AddHostedService<QueueCacheService>();
+
+builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
+builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
+builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
+builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
+builder.Services.AddSingleton<IQueueCache, QueueCache>();
+builder.Services.AddSingleton<Config>();
+
+var app = builder.Build();
+
+InitiateQueues(builder.Configuration);
+InitiateDataSources(app, builder.Configuration);
+InitiateProcessChannelPolicies(app, builder.Configuration);
+
+// Configure the HTTP request pipeline.
+app.UseSwagger();
+app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
+
+app.UseCors(builder => builder
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
 
 static void InitiateQueues(ConfigurationManager configuration)
 {
