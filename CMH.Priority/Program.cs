@@ -14,29 +14,39 @@ using CMH.Data.Model;
 using CMH.Common.Variable;
 using CMH.Common.Extenstion;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.DataContracts;
 
 var builder = WebApplication.CreateBuilder(args);
-WebApplication app = null;
+var telemetryConfiguration = new TelemetryConfiguration();
+telemetryConfiguration.ConnectionString = String.Format(
+    $"{builder.Configuration.GetValue<string>("APPINSIGHTS_CONNECTIONSTRING")}", 
+    builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY"));
+var telemetryClient = new TelemetryClient(telemetryConfiguration);
 try
 {
     // Add services to the container.
+    telemetryClient.TrackTrace("AddAzureClients", SeverityLevel.Information);
     builder.Services.AddAzureClients(_ =>
     {
         _.AddServiceBusClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
         _.AddServiceBusAdministrationClient(builder.Configuration.GetValue<string>("ServiceBus:ConnectionString"));
     });
 
+    telemetryClient.TrackTrace("AddHttpClient", SeverityLevel.Information);
     builder.Services.AddHttpClient("Function", _ =>
     {
         _.BaseAddress = new Uri($"{builder.Configuration.GetValue<string>("Function:API")}");
         _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     });
 
+    telemetryClient.TrackTrace("AddApplicationInsightsTelemetry", SeverityLevel.Information);
     builder.Services.AddApplicationInsightsTelemetry(option =>
     {
         option.ConnectionString = builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY");
     });
 
+    telemetryClient.TrackTrace("AddMvcRoutingControllerEct", SeverityLevel.Information);
     builder.Services.AddMvc().AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -51,6 +61,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
 
+    telemetryClient.TrackTrace("AddServices", SeverityLevel.Information);
     builder.Services.AddHostedService<PriorityService>();
     builder.Services.AddHostedService<QueueCacheService>();
 
@@ -61,15 +72,18 @@ try
     builder.Services.AddSingleton<IQueueCache, QueueCache>();
     builder.Services.AddSingleton<Config>();
 
-    app = builder.Build();
+    telemetryClient.TrackTrace("Build", SeverityLevel.Information);
+    var app = builder.Build();
 
-    StartUpTrace(app, "Build!");
-
+    telemetryClient.TrackTrace("InitiateQueues", SeverityLevel.Information);
     InitiateQueues(builder.Configuration);
+    telemetryClient.TrackTrace("InitiateDataSources", SeverityLevel.Information);
     InitiateDataSources(app, builder.Configuration);
+    telemetryClient.TrackTrace("InitiateProcessChannelPolicies", SeverityLevel.Information);
     InitiateProcessChannelPolicies(app, builder.Configuration);
 
     // Configure the HTTP request pipeline.
+    telemetryClient.TrackTrace("Configure the HTTP request pipeline", SeverityLevel.Information);
     app.UseSwagger();
     app.UseSwaggerUI(_ => _.DocExpansion(DocExpansion.None));
 
@@ -84,28 +98,12 @@ try
 
     app.MapControllers();
 
-    StartUpTrace(app, "Started!");
-
+    telemetryClient.TrackTrace("Run", SeverityLevel.Information);
     app.Run();
 } 
 catch (Exception e)
 {
-    StartUpTrace(app, $"Exception {e.Message} {e.StackTrace}");
-}
-
-void StartUpTrace(WebApplication? app, string message)
-{
-    if(app == null)
-    {
-        using var scope = app.Services.CreateScope();
-        var telemetryClient = scope.ServiceProvider.GetRequiredService<TelemetryClient>();
-        telemetryClient.TrackTrace(message);
-    } 
-    else
-    {
-
-    }
-    
+    telemetryClient.TrackTrace($"Exception {e.Message} {e.StackTrace}", SeverityLevel.Error);
 }
 
 static void InitiateQueues(ConfigurationManager configuration)
