@@ -122,7 +122,7 @@ jobs:
         run: dotnet publish ${{env.SIMULATOR_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
         
       - name: Create Zip File
-        uses: papeloto/action-zip@v1
+        uses: vimtor/action-zip@v1
         with:
           files: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}/
           dest: ${{env.DOTNET_ROOT}}/${{ env.SIMULATOR_PROJECT_NAME }}.zip
