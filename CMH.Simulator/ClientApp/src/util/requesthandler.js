@@ -9,7 +9,7 @@ axios.interceptors.response.use(response => {
     }
 });
 
-export default {
+const requestHandler = {
     send: async (request) => {
         try {
             let url = Config.apiURL() + request.url;
@@ -45,3 +45,5 @@ export default {
         }
     }
 }
+
+export default requestHandler;

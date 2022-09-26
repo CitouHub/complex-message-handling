@@ -1,5 +1,4 @@
 import Request from "../util/requesthandler"
-import settingsService from "./settings.service"
 
 const statisticsService = {
     getPriorityStatistics: async () => await Request.send({
@@ -40,4 +39,4 @@ const statisticsService = {
     })
 }
 
-export default settingsService;
+export default statisticsService;

@@ -1,4 +1,4 @@
-export default {
+const config = {
     setApplicationSettings: (appSettings) => {
         localStorage.setItem('appSettings', JSON.stringify(appSettings));
     },
@@ -11,3 +11,5 @@ export default {
         return '' + appSettings["Web:Version"];
     }
 }
+
+export default config;
