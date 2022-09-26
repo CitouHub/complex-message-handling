@@ -167,7 +167,7 @@ jobs:
       - name: Download ${{env.PROCESS_PROJECT_NAME}}
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.PROCESS_PROJECT_NAME}}
+          name: ${{env.PROCESS_PROJECT_NAME}}.zip
 
       - name: Deploy to Azure App service ${{ env.PROCESS_NAME }}
         id: deploy-process
