@@ -1,4 +1,4 @@
-name: Test
+name: Update POC
 
 env:
   SERVICE_PROJECT_NAME: CMH.Priority
@@ -58,6 +58,74 @@ jobs:
         with:
           name: ${{env.SERVICE_PROJECT_NAME}}
           path: ${{env.DOTNET_ROOT}}/${{env.SERVICE_PROJECT_NAME}}
+          
+  build-process:
+    runs-on: ubuntu-latest
+    needs: unit-test
+    name: Build process
+
+    steps:
+      - uses: AutoModality/action-clean@v1
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Set up dependency caching for faster builds
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build ${{env.PROCESS_PROJECT_NAME}}
+        run: dotnet build ${{env.PROCESS_PROJECT_NAME}} -c Release 
+
+      - name: Publish ${{env.PROCESS_PROJECT_NAME}}
+        run: dotnet publish ${{env.PROCESS_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.PROCESS_PROJECT_NAME}}
+
+      - name: Upload ${{env.PROCESS_PROJECT_NAME}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.PROCESS_PROJECT_NAME}}
+          path: ${{env.DOTNET_ROOT}}/${{env.PROCESS_PROJECT_NAME}}
+          
+  build-simulate:
+    runs-on: ubuntu-latest
+    needs: unit-test
+    name: Build simulate
+
+    steps:
+      - uses: AutoModality/action-clean@v1
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      
+      - name: Set up dependency caching for faster builds
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Build ${{env.SIMULATE_PROJECT_NAME}}
+        run: dotnet build ${{env.SIMULATE_PROJECT_NAME}} -c Release 
+
+      - name: Publish ${{env.SIMULATE_PROJECT_NAME}}
+        run: dotnet publish ${{env.SIMULATE_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATE_PROJECT_NAME}}
+
+      - name: Upload ${{env.SIMULATE_PROJECT_NAME}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{env.SIMULATE_PROJECT_NAME}}
+          path: ${{env.DOTNET_ROOT}}/${{env.SIMULATE_PROJECT_NAME}}
 
   deploy-service:
     runs-on: ubuntu-latest
@@ -79,4 +147,48 @@ jobs:
         with:
           app-name: ${{ env.SERVICE_NAME }}
           publish-profile: ${{ secrets.AZURE_SERVICE_PUBLISH_PROFILE }}
+          package: .
+          
+  deploy-process:
+    runs-on: ubuntu-latest
+    needs: build-service
+    name: Deploy process
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download ${{env.PROCESS_PROJECT_NAME}}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{env.PROCESS_PROJECT_NAME}}
+
+      - name: Deploy to Azure App service ${{ env.PROCESS_NAME }}
+        id: deploy-to-service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.PROCESS_NAME }}
+          publish-profile: ${{ secrets.AZURE_PROCESS_PUBLISH_PROFILE }}
+          package: .
+          
+  deploy-simulate:
+    runs-on: ubuntu-latest
+    needs: build-service
+    name: Deploy simulate
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download ${{env.SIMULATE_PROJECT_NAME}}
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{env.PSIMULATE_PROJECT_NAME}}
+
+      - name: Deploy to Azure App service ${{ env.SIMULATE_NAME }}
+        id: deploy-to-service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.SIMULATE_NAME }}
+          publish-profile: ${{ secrets.AZURE_SIMULATE_PUBLISH_PROFILE }}
           package: .
