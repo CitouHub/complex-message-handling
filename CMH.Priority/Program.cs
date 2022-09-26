@@ -18,10 +18,12 @@ using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.DataContracts;
 
 var builder = WebApplication.CreateBuilder(args);
-var telemetryConfiguration = new TelemetryConfiguration();
-telemetryConfiguration.ConnectionString = String.Format(
-    $"{builder.Configuration.GetValue<string>("APPINSIGHTS_CONNECTIONSTRING")}", 
-    builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY"));
+var telemetryConfiguration = new TelemetryConfiguration
+{
+    ConnectionString = String.Format(
+    $"{builder.Configuration.GetValue<string>("APPINSIGHTS_CONNECTIONSTRING")}",
+    builder.Configuration.GetValue<string>("APPINSIGHTS_INSTRUMENTATIONKEY"))
+};
 var telemetryClient = new TelemetryClient(telemetryConfiguration);
 try
 {
