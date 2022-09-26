@@ -3,10 +3,10 @@ name: Update POC
 env:
   SERVICE_PROJECT_NAME: CMH.Priority
   PROCESS_PROJECT_NAME: CMH.Process
-  SIMULATE_PROJECT_NAME: CMH.Simulate
+  SIMULATOR_PROJECT_NAME: CMH.Simulator
   SERVICE_NAME: as-cmh-service
   PROCESS_NAME: af-cmh-process
-  SIMULATE_NAME: as-cmh-simulate
+  SIMULATOR_NAME: as-cmh-simulator
   DOTNET_VERSION: '6.0'
   CI: false
 
@@ -93,10 +93,10 @@ jobs:
           name: ${{env.PROCESS_PROJECT_NAME}}
           path: ${{env.DOTNET_ROOT}}/${{env.PROCESS_PROJECT_NAME}}
           
-  build-simulate:
+  build-simulator:
     runs-on: ubuntu-latest
     needs: unit-test
-    name: Build simulate
+    name: Build simulator
 
     steps:
       - uses: AutoModality/action-clean@v1
@@ -115,17 +115,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Build ${{env.SIMULATE_PROJECT_NAME}}
-        run: dotnet build ${{env.SIMULATE_PROJECT_NAME}} -c Release 
+      - name: Build ${{env.SIMULATOR_PROJECT_NAME}}
+        run: dotnet build ${{env.SIMULATOR_PROJECT_NAME}} -c Release 
 
-      - name: Publish ${{env.SIMULATE_PROJECT_NAME}}
-        run: dotnet publish ${{env.SIMULATE_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATE_PROJECT_NAME}}
+      - name: Publish ${{env.SIMULATOR_PROJECT_NAME}}
+        run: dotnet publish ${{env.SIMULATOR_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
 
-      - name: Upload ${{env.SIMULATE_PROJECT_NAME}}
+      - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.SIMULATE_PROJECT_NAME}}
-          path: ${{env.DOTNET_ROOT}}/${{env.SIMULATE_PROJECT_NAME}}
+          name: ${{env.SIMULATOR_PROJECT_NAME}}
+          path: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
 
   deploy-service:
     runs-on: ubuntu-latest
@@ -173,22 +173,22 @@ jobs:
           
   deploy-simulate:
     runs-on: ubuntu-latest
-    needs: build-simulate
-    name: Deploy simulate
+    needs: build-simulator
+    name: Deploy simulator
     environment:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download ${{env.SIMULATE_PROJECT_NAME}}
+      - name: Download ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/download-artifact@v3
         with:
           name: ${{env.PSIMULATE_PROJECT_NAME}}
 
-      - name: Deploy to Azure App service ${{ env.SIMULATE_NAME }}
+      - name: Deploy to Azure App service ${{ env.SIMULATOR_NAME }}
         id: deploy-to-service
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.SIMULATE_NAME }}
-          publish-profile: ${{ secrets.AZURE_SIMULATE_PUBLISH_PROFILE }}
+          publish-profile: ${{ secrets.AZURE_SIMULATOR_PUBLISH_PROFILE }}
           package: .
