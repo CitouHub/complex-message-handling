@@ -48,10 +48,10 @@ namespace CMH.Priority.Controller
 
         [HttpPut]
         [Route("messages/process/reset")]
-        public async Task ResetProcessMessagesStatistics()
+        public async Task   ResetProcessMessagesStatistics()
         {
             _messageStatisticsRepository.ResetProcessMessagesStatistics();
-            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.AbsolutePath ?? "", "statistics/reset"));
+            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics/reset"));
             await _functionHttpClient.PostAsync("", null);
         }
 

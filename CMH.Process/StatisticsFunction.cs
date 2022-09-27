@@ -22,8 +22,8 @@ namespace CMH.Process
                 TotalMemoryUsage = RuntimeTracker.TotalMemoryUsage,
                 TotalMessagesProcessed = RuntimeTracker.TotalMessagesProcessed,
                 TotalProcessDuration = RuntimeTracker.TotalProcessDuration,
-                MaxParallellTasks = RuntimeTracker.ParallellTasks.Max(),
-                AvgParallellTasks = (short)Math.Round(RuntimeTracker.ParallellTasks.Average(_ => _), 0),
+                MaxParallellTasks = RuntimeTracker.ParallellTasks.Any() ? RuntimeTracker.ParallellTasks.Max() : (short)0,
+                AvgParallellTasks = RuntimeTracker.ParallellTasks.Any() ? (short)Math.Round(RuntimeTracker.ParallellTasks.Average(_ => _), 0) : (short)0,
                 SessionStart = RuntimeTracker.SessionStart,
                 SessionStop = RuntimeTracker.SessionStop
             };
