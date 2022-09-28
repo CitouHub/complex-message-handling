@@ -22,39 +22,6 @@ const RuntimeStatisticsTable = ({ runtimeStatistics }) => {
                         <td>{runtimeStatistics.avgMessagesFetchDuration}</td>
                     </tr>
                 </tbody>
-                <thead>
-                    <tr>
-                        <td>Tot. msg. processed</td>
-                        <td>Avg. msg. through put (msg/s)</td>
-                        <td>Max parallell task</td>
-                        <td>Avg. parallell task</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>{runtimeStatistics.totalMessagesProcessed}</td>
-                        <td>{runtimeStatistics.avgThroughPut}</td>
-                        <td>{runtimeStatistics.maxParallellTasks}</td>
-                        <td>{runtimeStatistics.avgParallellTasks}</td>
-                    </tr>
-                </tbody>
-            </table>
-            <h4>Costs</h4>
-            <table>
-                <thead>
-                    <tr>
-                        <td>Approx. exec. time</td>
-                        <td>Approx. tot. exec.</td>
-                        <td>Tot. cost</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>$ {runtimeStatistics.approxExecutionTimeCost}</td>
-                        <td>$ {runtimeStatistics.approxTotalExecutionCost}</td>
-                        <td>$ {runtimeStatistics.approxExecutionTimeCost + runtimeStatistics.approxTotalExecutionCost}</td>
-                    </tr>
-                </tbody>
             </table>
         </div>
     );

@@ -6,16 +6,15 @@ import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import LoadingButton from '@mui/lab/LoadingButton';
 import SendIcon from '@mui/icons-material/Send';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import NotificationMessage from '../component/notification/snackbar.message';
 
 import QueueService from '../service/queue.service';
+import TestService from '../service/test.service';
 import DataSourceService from '../service/datasource.service';
 
 const SendMessages = () => {
     const [loading, setLoading] = useState(true);
-    const [sendingMessages, setSendingMessages] = useState(false);
-    const [resetting, setResetting] = useState(false);
+    const [startingTest, setStartingTest] = useState(false);
     const [notification, setNotification] = useState('');
     const [nbrOfMessages, setNbrOfMessages] = useState(0);
     const [dataSources, setDataSources] = useState([]);
@@ -34,19 +33,11 @@ const SendMessages = () => {
         });
     }, []);
 
-    const sendMessages = () => {
-        setSendingMessages(true);
-        QueueService.sendMessages(nbrOfMessages, priorityQueueName, dataSource.id).then(() => {
-            setSendingMessages(false);
-            setNotification('Messages sent!')
-        });
-    }
-
-    const resetQueues = () => {
-        setResetting(true);
-        QueueService.resetQueues().then(() => {
-            setResetting(false);
-            setNotification('Queues cleared!')
+    const startTest = () => {
+        setStartingTest(true);
+        TestService.startTest(nbrOfMessages, priorityQueueName, dataSource.id).then(() => {
+            setStartingTest(false);
+            setNotification('Test started!')
         });
     }
 
@@ -92,23 +83,13 @@ const SendMessages = () => {
                                 ))}
                             </Select>
                         </FormControl>
-                    </div>
-                    <div>
                         <LoadingButton
-                            loading={sendingMessages}
+                            loading={startingTest}
                             variant="contained"
                             loadingPosition="start"
                             startIcon={<SendIcon />}
-                            onClick={sendMessages}>
-                            {sendingMessages === false ? 'Send messages': 'Sending messages...'}
-                        </LoadingButton>
-                        <LoadingButton
-                            loading={resetting}
-                            variant="contained"
-                            loadingPosition="start"
-                            startIcon={<RestartAltIcon />}
-                            onClick={resetQueues}>
-                            {resetting === false ? 'Clear queues' : 'Clearing queues...'}
+                            onClick={startTest}>
+                            {startingTest === false ? 'Start test' : 'Starting test...'}
                         </LoadingButton>
                     </div>
                     <NotificationMessage

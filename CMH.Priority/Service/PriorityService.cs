@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-using Azure.Messaging.ServiceBus;
+﻿using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
 using CMH.Common.Extenstion;
@@ -133,6 +131,7 @@ namespace CMH.Priority.Service
         {
             foreach (var dataSourceMessages in priorityMessages.GroupBy(_ => new { DataSourceId = (short)_.ApplicationProperties["DataSourceId"] }))
             {
+                var start = DateTime.UtcNow;
                 if (cancellationToken.IsCancellationRequested)
                 {
                     break;
@@ -164,8 +163,8 @@ namespace CMH.Priority.Service
 
                 var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                 await sender.SendMessagesAsync(messages, cancellationToken);
-                messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageCompleted(priorityQueue.Name,
-                    (DateTimeOffset.UtcNow - (DateTimeOffset)_.ApplicationProperties["EnqueuedTime"]).TotalMilliseconds));
+                messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageHandeled(
+                    priorityQueue.Name, MessageHandleStatus.Completed, (DateTimeOffset.UtcNow - start).TotalMilliseconds));
                 _logger.LogInformation($"Messages forwarded");
 
                 if (messagesToReschedule.Count > 0)
@@ -180,7 +179,8 @@ namespace CMH.Priority.Service
                             (short)_queueCache.GetPriorityQueues().IndexOf(priorityQueue),
                             _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
                         await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));
-                        _messageStatisticsRepository.PriorityMessageRescheduled(priorityQueue.Name);
+                        _messageStatisticsRepository.PriorityMessageHandeled(
+                            priorityQueue.Name, MessageHandleStatus.Rescheduled, (start - DateTimeOffset.UtcNow).TotalMilliseconds);
                     });
                     _logger.LogInformation($"Messages reschduled");
                 }

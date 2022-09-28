@@ -9,6 +9,7 @@ const MessageStatisticsTable = ({ title, category, messageStatistics }) => {
                     <tr>
                         <td>{category}</td>
                         <td>Tot. msg. handled</td>
+                        <td>Avg. msg. throughput (msg/s)</td>
                         <td>Tot. msg. rescheduled</td>
                         <td>Tot. msg. discarded</td>
                         <td>Avg. msg. handle duration (ms)</td>
@@ -20,6 +21,7 @@ const MessageStatisticsTable = ({ title, category, messageStatistics }) => {
                         <tr key={categoryId}>
                             <td>{categoryId}</td>
                             <td>{messageStatistics[categoryId].totalMessagesHandled}</td>
+                            <td>{messageStatistics[categoryId].avgThroughPut}</td>
                             <td>{messageStatistics[categoryId].totalMessagesRescheduled}</td>
                             <td>{messageStatistics[categoryId].totalMessagesDiscarded}</td>
                             <td>{messageStatistics[categoryId].avgMessageHandleDuration}</td>

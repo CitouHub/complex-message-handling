@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs.Extensions.Http;
 
 using Azure.Messaging.ServiceBus;
 using Newtonsoft.Json;
@@ -26,6 +29,13 @@ namespace CMH.Function
         {
             _serviceBusClient = serviceBusClient;
             _repositoryService = repositoryService;
+        }
+
+        [FunctionName("ResetProcess")]
+        public IActionResult ResetStatistics([HttpTrigger(AuthorizationLevel.Function, "post", Route = "process/reset")] HttpRequest req, ILogger log)
+        {
+            _repositoryService.ResetCache();
+            return new OkResult();
         }
 
         [FunctionName("ProcessChannel_Default")]
@@ -58,24 +68,19 @@ namespace CMH.Function
 
         public async Task ProcessMessageAsync(ServiceBusReceivedMessage message, ILogger log, string functionName)
         {
-            var executionStart = DateTimeOffset.UtcNow;
-            RuntimeTracker.StartSession();
-
             try
             {
-                var success = await HandleJobMessageAsync(message.Body.ToString());
+                var executionStart = DateTimeOffset.UtcNow;
                 var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
-                await HandleResult(success, processChannel, message, log);    
+                var success = await HandleJobMessageAsync(message.Body.ToString());
+                var messageHandleStatus = await HandleResult(success, processChannel, message, log);
+                ProcessStatistics.MessageHandeled(processChannel, messageHandleStatus, (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
             } 
             catch(Exception e)
             {
                 log.LogError($"{e.Message}\n{e.StackTrace}", e);
                 throw;
             } 
-            finally
-            {
-                RuntimeTracker.StopSession((DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
-            }
         }
 
         private async Task<bool> HandleJobMessageAsync(string message)
@@ -90,9 +95,8 @@ namespace CMH.Function
             return await dataSource.DoWork();
         }
 
-        private async Task HandleResult(bool success, ProcessChannel processChannel, ServiceBusReceivedMessage message, ILogger log)
+        private async Task<MessageHandleStatus> HandleResult(bool success, ProcessChannel processChannel, ServiceBusReceivedMessage message, ILogger log)
         {
-            var enqueuedTime = (DateTimeOffset)message.ApplicationProperties["EnqueuedTime"];
             if (!success)
             {
                 var processChannelPolicy = await _repositoryService.GetProcessChannelPolicyAsync(processChannel);
@@ -109,17 +113,17 @@ namespace CMH.Function
 
                     var sender = _serviceBusClient.CreateSender($"{Queue.ProcessQueuePrefix}{processChannelPolicy.Name}");
                     await sender.RescheduleMessageAsync(message, scheduledEnqueueTime);
-                    await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Rescheduled, enqueuedTime);
+                    return MessageHandleStatus.Rescheduled;
                 } 
                 else
                 {
                     log.LogWarning($"Unable to process message {message.MessageId} {message.Body} due to too many tries");
-                    await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Discarded, enqueuedTime);
+                    return MessageHandleStatus.Discarded;
                 }
             }
             else
             {
-                await _repositoryService.MessageHandledAsync(processChannel, MessageHandleStatus.Completed, enqueuedTime);
+                return MessageHandleStatus.Completed;
             }
         }
     }

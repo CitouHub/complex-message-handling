@@ -1,11 +1,11 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
 using CMH.Common.Variable;
 using CMH.Data.Model;
+using CMH.Process.Util;
 
 namespace CMH.Process.Service
 {
@@ -13,7 +13,7 @@ namespace CMH.Process.Service
     {
         Task<DataSource> GetDataSourceAsync(short dataSourceId);
         Task<ProcessChannelPolicy> GetProcessChannelPolicyAsync(ProcessChannel processChannel);
-        Task MessageHandledAsync(ProcessChannel processChannel, MessageHandleStatus processMessageStatus, DateTimeOffset enqueueTime);
+        void ResetCache();
     }
 
     public class RepositoryService : IRepositoryService
@@ -27,32 +27,62 @@ namespace CMH.Process.Service
 
         public async Task<DataSource> GetDataSourceAsync(short dataSourceId)
         {
-            var result = await _httpClient.GetAsync($"datasource/{dataSourceId}");
-            if (result.IsSuccessStatusCode)
+            if(Cache.DataSource.ContainsKey(dataSourceId))
             {
-                var content = await result.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<DataSource>(content);
+                return Cache.DataSource[dataSourceId];
+            } 
+            else
+            {
+                var result = await _httpClient.GetAsync($"datasource/{dataSourceId}");
+                if (result.IsSuccessStatusCode)
+                {
+                    var content = await result.Content.ReadAsStringAsync();
+                    var dataSource = JsonConvert.DeserializeObject<DataSource>(content);
+                    lock(Cache.DataSource)
+                    {
+                        if (dataSource != null && Cache.DataSource.ContainsKey(dataSourceId) == false)
+                        {
+                            Cache.DataSource[dataSourceId] = dataSource;
+                        }
+                    }
+                    return dataSource;
+                }
             }
-
+            
             return null;
         }
 
         public async Task<ProcessChannelPolicy> GetProcessChannelPolicyAsync(ProcessChannel processChannel)
         {
-            var result = await _httpClient.GetAsync($"processchannelpolicy/{processChannel}");
-            if (result.IsSuccessStatusCode)
+            if (Cache.ProcessChannelPolicy.ContainsKey(processChannel))
             {
-                var content = await result.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
+                return Cache.ProcessChannelPolicy[processChannel];
+            }
+            else
+            {
+                var result = await _httpClient.GetAsync($"processchannelpolicy/{processChannel}");
+                if (result.IsSuccessStatusCode)
+                {
+                    var content = await result.Content.ReadAsStringAsync();
+                    var processChannelPolicy = JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
+                    lock(Cache.ProcessChannelPolicy)
+                    {
+                        if (processChannelPolicy != null && Cache.ProcessChannelPolicy.ContainsKey(processChannel) == false)
+                        {
+                            Cache.ProcessChannelPolicy[processChannel] = processChannelPolicy;
+                        }
+                    }
+                    return processChannelPolicy;
+                }
             }
 
             return null;
         }
 
-        public async Task MessageHandledAsync(ProcessChannel processChannel, MessageHandleStatus processMessageStatus, DateTimeOffset enqueueTime)
+        public void ResetCache()
         {
-            var duration = (DateTimeOffset.UtcNow - enqueueTime).TotalMilliseconds;
-            await _httpClient.PostAsync($"statistics/message/process/handled/{processChannel}/{processMessageStatus}/{Math.Round(duration)}", null);
+            Cache.DataSource = new();
+            Cache.ProcessChannelPolicy = new();
         }
     }
 }

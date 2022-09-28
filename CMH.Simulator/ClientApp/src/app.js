@@ -3,11 +3,10 @@ import { Container } from "reactstrap";
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
-import SendMessages from './view/sendmessages';
 import DataSources from './view/datasources';
 import ProcessChannelPolicies from './view/processchannelpolicies';
 import Settings from './view/settings';
-import Statistics from './view/statistics';
+import Test from './view/test';
 
 import Config from './util/config';
 import AppSettingsService from './service/appsettings.service';
@@ -65,15 +64,14 @@ const App = () => {
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: '2rem' }}>
                             <Tabs value={value} onChange={handleChange}>
-                                <Tab label="Send messages" {...getProps(0)} />
+                                <Tab label="Test" {...getProps(0)} />
                                 <Tab label="Data sources" {...getProps(1)} />
                                 <Tab label="Process channels" {...getProps(2)} />
                                 <Tab label="Settings" {...getProps(3)} />
-                                <Tab label="Statistics" {...getProps(4)} />
                             </Tabs>
                         </Box>
                         <TabPanel value={value} index={0}>
-                            <SendMessages />
+                            <Test />
                         </TabPanel>
                         <TabPanel value={value} index={1}>
                             <DataSources />
@@ -83,9 +81,6 @@ const App = () => {
                         </TabPanel>
                         <TabPanel value={value} index={3}>
                             <Settings />
-                        </TabPanel>
-                        <TabPanel value={value} index={4}>
-                            <Statistics />
                         </TabPanel>
                     </Box>
                 </Container>
