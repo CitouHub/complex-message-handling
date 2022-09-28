@@ -120,15 +120,12 @@ jobs:
 
       - name: Publish ${{env.SIMULATOR_PROJECT_NAME}}
         run: dotnet publish ${{env.SIMULATOR_PROJECT_NAME}} -c Release -o ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
-        
-      - name: Zip artifact for deployment
-        run: zip ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}.zip ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}/* -r
 
       - name: Upload ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/upload-artifact@v3
         with:
-          name: ${{env.SIMULATOR_PROJECT_NAME}}.zip
-          path: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}.zip
+          name: ${{env.SIMULATOR_PROJECT_NAME}}
+          path: ${{env.DOTNET_ROOT}}/${{env.SIMULATOR_PROJECT_NAME}}
 
   deploy-service:
     runs-on: ubuntu-latest
@@ -183,10 +180,10 @@ jobs:
       url: ${{ steps.deploy-simulator.outputs.webapp-url }}
 
     steps:
-      - name: Download ${{env.SIMULATOR_PROJECT_NAME}}.zip
+      - name: Download ${{env.SIMULATOR_PROJECT_NAME}}
         uses: actions/download-artifact@v3
         with:
-          name: ${{env.SIMULATOR_PROJECT_NAME}}.zip
+          name: ${{env.SIMULATOR_PROJECT_NAME}}
 
       - name: Deploy to Azure App service ${{ env.SIMULATOR_NAME }}
         id: deploy-simulator
