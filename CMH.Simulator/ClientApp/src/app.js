@@ -60,7 +60,7 @@ const App = () => {
             {loading && <p>Loading...</p>}
             {!loading &&
                 <Container>
-                    <h1>CMH Simulator</h1>
+                    <h1>CMH Simulator :)</h1>
                     <Box sx={{ width: '100%' }}>
                         <Box sx={{ borderBottom: 1, borderColor: 'divider', marginBottom: '2rem' }}>
                             <Tabs value={value} onChange={handleChange}>
