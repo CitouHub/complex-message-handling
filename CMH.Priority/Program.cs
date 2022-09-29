@@ -95,6 +95,9 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
 {
     using var scope = app.Services.CreateScope();
     var dataSourceRepository = scope.ServiceProvider.GetRequiredService<IDataSourceRepository>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("InitiateDataSources starting");
 
     var dataSourceDefaults = configuration.GetSection("Repository:DataSource:Default").Get<List<string>>();
     if (dataSourceDefaults != null && dataSourceDefaults.Any())
@@ -114,12 +117,17 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
             dataSourceRepository.Add(dataSource);
         }
     }
+
+    logger.LogInformation("InitiateDataSources finished");
 }
 
 static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationManager configuration)
 {
     using var scope = app.Services.CreateScope();
     var processChannelPolicyRepository = scope.ServiceProvider.GetRequiredService<IProcessChannelPolicyRepository>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+    logger.LogInformation("InitiateProcessChannelPolicies starting");
 
     var processChannelPolicies = configuration.GetSection("Repository:ProcessChannelPolicies:Default").Get<List<string>>();
     if (processChannelPolicies != null && processChannelPolicies.Any())
@@ -147,4 +155,6 @@ static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationMana
             processChannelPolicyRepository.Add(processChannelPolicy);
         }
     }
+
+    logger.LogInformation("InitiateProcessChannelPolicies finished");
 }
