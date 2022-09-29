@@ -7,6 +7,7 @@ using CMH.Common.Message;
 using CMH.Data.Repository;
 using CMH.Common.Variable;
 using System.Net.Http;
+using CMH.Common.Util;
 
 namespace CMH.Priority.Controller
 {
@@ -15,17 +16,20 @@ namespace CMH.Priority.Controller
     public class TestController : ControllerBase
     {
         private readonly HttpClient _functionHttpClient;
+        private readonly ICacheManager _cacheManager;
         private readonly IDataSourceRepository _dataSourceRepository;
         private readonly ServiceBusClient _serviceBusClient;
         private readonly ServiceBusAdministrationClient _serviceBusAdministrationClient;
 
         public TestController(
             IHttpClientFactory httpClientFactory,
+            ICacheManager cacheManager,
             IDataSourceRepository dataSourceRepository,
             ServiceBusClient serviceBusClient,
             ServiceBusAdministrationClient serviceBusAdministrationClient)
         {
             _functionHttpClient = httpClientFactory.CreateClient("Function");
+            _cacheManager = cacheManager;
             _dataSourceRepository = dataSourceRepository;
             _serviceBusClient = serviceBusClient;
             _serviceBusAdministrationClient = serviceBusAdministrationClient;
@@ -49,7 +53,10 @@ namespace CMH.Priority.Controller
                 _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "process/reset"));
                 await _functionHttpClient.PostAsync("", null);
             } catch { }
-            
+
+            //Reset cache
+            _cacheManager.Clear();
+
             //Post messages
             var maxMessageBatch = 500;
             var maxParallellWriteTasks = 10;
