@@ -175,7 +175,7 @@ namespace CMH.Priority.Service
                             _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime,
                             _config.BackoffPolicy.ProcessChannelFull.TryFactor,
                             _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
-                            (int)_.ApplicationProperties["Tries"],
+                            (int)_.ApplicationProperties["Tries"] + 1,
                             (short)_queueCache.GetPriorityQueues().IndexOf(priorityQueue),
                             _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
                         await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));

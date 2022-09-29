@@ -44,9 +44,12 @@ namespace CMH.Priority.Controller
             }
 
             //Reset process
-            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "process/reset"));
-            await _functionHttpClient.PostAsync("", null);
-
+            try
+            {
+                _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "process/reset"));
+                await _functionHttpClient.PostAsync("", null);
+            } catch { }
+            
             //Post messages
             var maxMessageBatch = 500;
             var maxParallellWriteTasks = 10;
