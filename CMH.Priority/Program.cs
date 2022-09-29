@@ -11,7 +11,6 @@ using CMH.Priority.Util;
 using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
-using CMH.Common.Extenstion;
 using CMH.Common.Util;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,7 +53,7 @@ builder.Services.AddSingleton<Config>();
 
 var app = builder.Build();
 
-InitiateQueues(builder.Configuration);
+InitiatePriorityQueues(app, builder.Configuration);
 InitiateDataSources(app, builder.Configuration);
 InitiateProcessChannelPolicies(app, builder.Configuration);
 
@@ -75,16 +74,19 @@ app.MapControllers();
 
 app.Run();
 
-static void InitiateQueues(ConfigurationManager configuration)
+static void InitiatePriorityQueues(WebApplication app, ConfigurationManager configuration)
 {
+    using var scope = app.Services.CreateScope();
+    var config = scope.ServiceProvider.GetRequiredService<Config>();
     var connectionString = configuration.GetValue<string>("ServiceBus:ConnectionString");
     var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
-    var queues = serviceBusAdministrationClient.GetQueueNamesAsync("").Result;
 
-    foreach (var queue in queues)
+    foreach (var priorityQueue in config.Priority.Queues)
     {
-        serviceBusAdministrationClient.DeleteQueueAsync(queue).Wait();
-        serviceBusAdministrationClient.CreateQueueAsync(queue).Wait();
+        if (serviceBusAdministrationClient.QueueExistsAsync(priorityQueue).Result == false)
+        {
+            serviceBusAdministrationClient.CreateQueueAsync(priorityQueue).Wait();
+        }
     }
 }
 
