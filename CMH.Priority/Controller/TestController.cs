@@ -6,7 +6,6 @@ using CMH.Common.Extenstion;
 using CMH.Common.Message;
 using CMH.Data.Repository;
 using CMH.Common.Variable;
-using System.Net.Http;
 using CMH.Common.Util;
 
 namespace CMH.Priority.Controller

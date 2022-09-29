@@ -53,9 +53,14 @@ builder.Services.AddSingleton<Config>();
 
 var app = builder.Build();
 
-InitiatePriorityQueues(app, builder.Configuration);
-InitiateDataSources(app, builder.Configuration);
-InitiateProcessChannelPolicies(app, builder.Configuration);
+using var scope = app.Services.CreateScope();
+var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+logger.LogInformation("CMH.Service initializing!");
+
+InitiatePriorityQueues(app, builder.Configuration, scope, logger);
+InitiateDataSources(app, builder.Configuration, scope, logger);
+InitiateProcessChannelPolicies(app, builder.Configuration, scope, logger);
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
@@ -72,14 +77,17 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+logger.LogInformation("CMH.Service started!");
+
 app.Run();
 
-static void InitiatePriorityQueues(WebApplication app, ConfigurationManager configuration)
+static void InitiatePriorityQueues(WebApplication app, ConfigurationManager configuration, IServiceScope scope, ILogger<Program> logger)
 {
-    using var scope = app.Services.CreateScope();
     var config = scope.ServiceProvider.GetRequiredService<Config>();
     var connectionString = configuration.GetValue<string>("ServiceBus:ConnectionString");
     var serviceBusAdministrationClient = new ServiceBusAdministrationClient(connectionString);
+
+    logger.LogInformation("InitiatePriorityQueues starting");
 
     foreach (var priorityQueue in config.Priority.Queues)
     {
@@ -88,13 +96,13 @@ static void InitiatePriorityQueues(WebApplication app, ConfigurationManager conf
             serviceBusAdministrationClient.CreateQueueAsync(priorityQueue).Wait();
         }
     }
+
+    logger.LogInformation("InitiatePriorityQueues finished");
 }
 
-static void InitiateDataSources(WebApplication app, ConfigurationManager configuration)
+static void InitiateDataSources(WebApplication app, ConfigurationManager configuration, IServiceScope scope, ILogger<Program> logger)
 {
-    using var scope = app.Services.CreateScope();
     var dataSourceRepository = scope.ServiceProvider.GetRequiredService<IDataSourceRepository>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("InitiateDataSources starting");
 
@@ -120,11 +128,9 @@ static void InitiateDataSources(WebApplication app, ConfigurationManager configu
     logger.LogInformation("InitiateDataSources finished");
 }
 
-static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationManager configuration)
+static void InitiateProcessChannelPolicies(WebApplication app, ConfigurationManager configuration, IServiceScope scope, ILogger<Program> logger)
 {
-    using var scope = app.Services.CreateScope();
     var processChannelPolicyRepository = scope.ServiceProvider.GetRequiredService<IProcessChannelPolicyRepository>();
-    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
     logger.LogInformation("InitiateProcessChannelPolicies starting");
 

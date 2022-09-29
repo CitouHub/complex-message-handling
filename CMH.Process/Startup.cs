@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using CMH.Process;
 using CMH.Process.Service;
@@ -19,6 +20,9 @@ namespace CMH.Process
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
+            var _loggerFactory = new LoggerFactory();
+            var logger = _loggerFactory.CreateLogger<Startup>();
+
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(builder.GetContext().ApplicationRootPath)
                 .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
@@ -40,7 +44,9 @@ namespace CMH.Process
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
             builder.Services.AddSingleton<ICacheManager, CacheManager>();
 
+            logger.LogInformation("CMH.Process awaiting initialization");
             AwaitInitialization(configuration);
+            logger.LogInformation("CMH.Process started");
         }
 
         static void AwaitInitialization(IConfigurationRoot configuration)
