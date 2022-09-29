@@ -29,6 +29,8 @@ namespace CMH.Process
                 .AddEnvironmentVariables()
                 .Build();
 
+            builder.Services.AddLogging();
+
             builder.Services.AddAzureClients(_ =>
             {
                 _.AddServiceBusClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
