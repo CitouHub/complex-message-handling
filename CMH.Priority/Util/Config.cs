@@ -44,6 +44,19 @@ namespace CMH.Priority.Util
 
         public class PriorityClass
         {
+            private List<string>? _Queues;
+            public List<string> Queues
+            {
+                get
+                {
+                    return _configuration != null ? (_Queues ?? _configuration.GetSection("Priority:Queues").Get<List<string>>()) : new List<string>();
+                }
+                set
+                {
+                    _Queues = value;
+                }
+            }
+
             private short? _ReadTasks;
             public short ReadTasks
             {

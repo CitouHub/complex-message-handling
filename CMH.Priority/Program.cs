@@ -6,7 +6,6 @@ using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Azure;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
-using CMH.Priority.Infrastructure;
 using CMH.Priority.Service;
 using CMH.Priority.Util;
 using CMH.Data.Repository;
@@ -45,13 +44,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddHostedService<PriorityService>();
-builder.Services.AddHostedService<QueueCacheService>();
 
 builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRepository>();
 builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
 builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
 builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
-builder.Services.AddSingleton<IQueueCache, QueueCache>();
 builder.Services.AddSingleton<ICacheManager, CacheManager>();
 builder.Services.AddSingleton<Config>();
 

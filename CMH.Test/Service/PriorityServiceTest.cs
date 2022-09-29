@@ -6,7 +6,6 @@ using NSubstitute;
 using Xunit;
 
 using CMH.Data.Repository;
-using CMH.Priority.Infrastructure;
 using CMH.Priority.Service;
 using CMH.Priority.Util;
 
@@ -15,7 +14,6 @@ namespace CMH.Test.Service
     public class PriorityServiceTest
     {
         private readonly ILogger<PriorityService> _logger = Substitute.For<ILogger<PriorityService>>();
-        private readonly IQueueCache _queueCache = Substitute.For<IQueueCache>();
         private readonly IMessageStatisticsRepository _messageStatisticsRepository = Substitute.For<IMessageStatisticsRepository>();
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository = Substitute.For<IRuntimeStatisticsRepository>();
         private readonly IDataSourceRepository _dataSourceRepository = Substitute.For<IDataSourceRepository>();
@@ -37,7 +35,7 @@ namespace CMH.Test.Service
             //Setup
             var priorityService = new PriorityService(new Config(), _logger, 
                 new ServiceBusClient(MockConnectionString), new ServiceBusAdministrationClient(MockConnectionString),
-                _queueCache, _messageStatisticsRepository, _runtimeStatisticsRepository, _dataSourceRepository);
+                _messageStatisticsRepository, _runtimeStatisticsRepository, _dataSourceRepository);
 
             //Act
             var availableSlots = priorityService.GetAvailableProcessChannelSpots(messageCount, priorityIndex, totalPriorities, prioritySlots);

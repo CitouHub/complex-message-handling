@@ -4,9 +4,7 @@ using Azure.Messaging.ServiceBus.Administration;
 using CMH.Common.Extenstion;
 using CMH.Common.Util;
 using CMH.Common.Variable;
-using CMH.Data.Model;
 using CMH.Data.Repository;
-using CMH.Priority.Infrastructure;
 using CMH.Priority.Util;
 
 namespace CMH.Priority.Service
@@ -17,7 +15,6 @@ namespace CMH.Priority.Service
         private readonly ILogger<PriorityService> _logger;
         private readonly ServiceBusClient _serviceBusClient;
         private readonly ServiceBusAdministrationClient _serviceBusAdministrationClient;
-        private readonly IQueueCache _queueCache;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
         private readonly IDataSourceRepository _dataSourceRepository;
@@ -31,7 +28,6 @@ namespace CMH.Priority.Service
             ILogger<PriorityService> logger,
             ServiceBusClient serviceBusClient,
             ServiceBusAdministrationClient serviceBusAdministrationClient,
-            IQueueCache queueCache,
             IMessageStatisticsRepository messageStatisticsRepository,
             IRuntimeStatisticsRepository runtimeStatisticsRepository,
             IDataSourceRepository dataSourceRepository)
@@ -40,7 +36,6 @@ namespace CMH.Priority.Service
             _config = config;
             _serviceBusClient = serviceBusClient;
             _serviceBusAdministrationClient = serviceBusAdministrationClient;
-            _queueCache = queueCache;
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
             _dataSourceRepository = dataSourceRepository;
@@ -52,11 +47,15 @@ namespace CMH.Priority.Service
         }
 
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            await _queueCache.AwaitReadyAsync(cancellationToken);
+            _ = Task.Run(() => RunService(cancellationToken));
+            return Task.CompletedTask;
+        }
 
-            while(cancellationToken.IsCancellationRequested == false)
+        private Task RunService(CancellationToken cancellationToken)
+        {
+            while (cancellationToken.IsCancellationRequested == false)
             {
                 if (_activeReadTasks < _config.Priority.ReadTasks)
                 {
@@ -65,6 +64,8 @@ namespace CMH.Priority.Service
                 }
                 Thread.Sleep(5000);
             }
+
+            return Task.CompletedTask;
         }
 
         private async Task HandleMessagesAsync(CancellationToken cancellationToken)
@@ -78,15 +79,15 @@ namespace CMH.Priority.Service
                 try
                 {
                     while (cancellationToken.IsCancellationRequested == false &&
-                        queueIndex < _queueCache.GetPriorityQueues().Count)
+                        queueIndex < _config.Priority.Queues.Count)
                     {
                         await _writeTaskSignal.WaitAsync(cancellationToken);
 
-                        var priorityQueue = _queueCache.GetPriorityQueues()[queueIndex];
-                        _logger.LogInformation($"Fetching new messages from {priorityQueue.Name}");
+                        var priorityQueue = _config.Priority.Queues[queueIndex];
+                        _logger.LogInformation($"Fetching new messages from {priorityQueue}");
 
-                        var receiver = _serviceBusClient.CreateReceiver(priorityQueue.Name);
-                        var priorityMessages = (await GetPriorityMessageAsync(receiver, priorityQueue.Name, cancellationToken))?.ToList();
+                        var receiver = _serviceBusClient.CreateReceiver(priorityQueue);
+                        var priorityMessages = (await GetPriorityMessageAsync(receiver, priorityQueue, cancellationToken))?.ToList();
                         _logger.LogInformation($"{(priorityMessages != null ? priorityMessages.Count : 0)} messages fetched");
 
                         if (cancellationToken.IsCancellationRequested == false && priorityMessages != null && priorityMessages.Count > 0)
@@ -101,7 +102,7 @@ namespace CMH.Priority.Service
                         }
                         else
                         {
-                            _logger.LogInformation($"No messages found in {priorityQueue.Name}, move to next queue");
+                            _logger.LogInformation($"No messages found in {priorityQueue}, move to next queue");
                             queueIndex++;
                             _writeTaskSignal.Release();
                         }
@@ -127,7 +128,7 @@ namespace CMH.Priority.Service
             _logger.LogInformation($"HandleMessagesAsync task finished ({_activeReadTasks}/{_config.Priority.ReadTasks})");
         }
 
-        private async Task WriteMessagesAsync(PriorityQueue priorityQueue, List<ServiceBusReceivedMessage> priorityMessages, CancellationToken cancellationToken)
+        private async Task WriteMessagesAsync(string priorityQueue, List<ServiceBusReceivedMessage> priorityMessages, CancellationToken cancellationToken)
         {
             foreach (var dataSourceMessages in priorityMessages.GroupBy(_ => new { DataSourceId = (short)_.ApplicationProperties["DataSourceId"] }))
             {
@@ -143,8 +144,8 @@ namespace CMH.Priority.Service
                 var queueProperties = await _serviceBusAdministrationClient.GetQueueRuntimePropertiesAsync(processChannelQueueName, cancellationToken);
                 var availableSpots = GetAvailableProcessChannelSpots(
                     queueProperties.Value.ActiveMessageCount,
-                    (short)_queueCache.GetPriorityQueues().IndexOf(priorityQueue),
-                    (short)_queueCache.GetPriorityQueues().Count,
+                    (short)_config.Priority.Queues.IndexOf(priorityQueue),
+                    (short)_config.Priority.Queues.Count,
                     _config.BackoffPolicy.ProcessChannelFull.PrioritySlots);
                 _logger.LogInformation($"{processChannelQueueName} has {availableSpots}");
 
@@ -164,23 +165,23 @@ namespace CMH.Priority.Service
                 var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                 await sender.SendMessagesAsync(messages, cancellationToken);
                 messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageHandeled(
-                    priorityQueue.Name, MessageHandleStatus.Completed, (DateTimeOffset.UtcNow - start).TotalMilliseconds));
+                    priorityQueue, MessageHandleStatus.Completed, (DateTimeOffset.UtcNow - start).TotalMilliseconds));
                 _logger.LogInformation($"Messages forwarded");
 
                 if (messagesToReschedule.Count > 0)
                 {
-                    var returnSender = _serviceBusClient.CreateSender(priorityQueue.Name);
+                    var returnSender = _serviceBusClient.CreateSender(priorityQueue);
                     messagesToReschedule.ForEach(async _ => {
                         var rescheduleTime = BackoffCalculator.CalculatePriorityRescheduleSleepTime(
                             _config.BackoffPolicy.ProcessChannelFull.InitialSleepTime,
                             _config.BackoffPolicy.ProcessChannelFull.TryFactor,
                             _config.BackoffPolicy.ProcessChannelFull.PriorityFactor,
                             (int)_.ApplicationProperties["Tries"] + 1,
-                            (short)_queueCache.GetPriorityQueues().IndexOf(priorityQueue),
+                            (short)_config.Priority.Queues.IndexOf(priorityQueue),
                             _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
                         await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));
                         _messageStatisticsRepository.PriorityMessageHandeled(
-                            priorityQueue.Name, MessageHandleStatus.Rescheduled, (start - DateTimeOffset.UtcNow).TotalMilliseconds);
+                            priorityQueue, MessageHandleStatus.Rescheduled, (start - DateTimeOffset.UtcNow).TotalMilliseconds);
                     });
                     _logger.LogInformation($"Messages reschduled");
                 }
