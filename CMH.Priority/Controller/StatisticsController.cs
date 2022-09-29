@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
+using CMH.Common.Util;
 
 namespace CMH.Priority.Controller
 {
@@ -13,14 +14,17 @@ namespace CMH.Priority.Controller
     public class StatisticsController : ControllerBase
     {
         private readonly HttpClient _functionHttpClient;
+        private readonly ICacheManager _cacheManager;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
 
         public StatisticsController(IHttpClientFactory httpClientFactory,
+            ICacheManager cacheManager,
             IMessageStatisticsRepository messageStatisticsRepository,
             IRuntimeStatisticsRepository runtimeStatisticsRepository)
         {
             _functionHttpClient = httpClientFactory.CreateClient("Function");
+            _cacheManager = cacheManager;
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
         }
@@ -43,24 +47,36 @@ namespace CMH.Priority.Controller
         [Route("messages/process")]
         public async Task<Dictionary<ProcessChannel, MessageStatistics>> GetProcessMessagesStatistics()
         {
-            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics"));
-            var result = await _functionHttpClient.GetAsync("");
-            if (result.IsSuccessStatusCode)
+            var cacheKey = "GetProcessMessagesStatistics";
+            Dictionary<ProcessChannel, MessageStatistics>? messageStatistics = null;
+            try
             {
-                var content = await result.Content.ReadAsStringAsync();
-                var messageStatistics = JsonConvert.DeserializeObject<Dictionary<ProcessChannel, MessageStatistics>>(content);
-                return messageStatistics ?? new Dictionary<ProcessChannel, MessageStatistics>();
+                _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics"));
+                var result = await _functionHttpClient.GetAsync("");
+                if (result.IsSuccessStatusCode)
+                {
+                    var content = await result.Content.ReadAsStringAsync();
+                    messageStatistics = JsonConvert.DeserializeObject<Dictionary<ProcessChannel, MessageStatistics>>(content);
+                    _cacheManager.Set(cacheKey, messageStatistics);
+                }
+            } 
+            catch
+            {
+                messageStatistics = _cacheManager.Get<Dictionary<ProcessChannel, MessageStatistics>>(cacheKey);
             }
 
-            return new Dictionary<ProcessChannel, MessageStatistics>();
+            return messageStatistics ?? new Dictionary<ProcessChannel, MessageStatistics>();
         }
 
         [HttpPut]
         [Route("messages/process/reset")]
         public async Task ResetProcessMessagesStatistics()
         {
-            _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics/reset"));
-            await _functionHttpClient.PostAsync("", null);
+            try
+            {
+                _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics/reset"));
+                await _functionHttpClient.PostAsync("", null);
+            } catch { }
         }
 
         [HttpGet]

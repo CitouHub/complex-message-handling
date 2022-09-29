@@ -13,6 +13,7 @@ using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
 using CMH.Common.Extenstion;
+using CMH.Common.Util;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,7 @@ builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRep
 builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
 builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
 builder.Services.AddSingleton<IQueueCache, QueueCache>();
+builder.Services.AddSingleton<ICacheManager, CacheManager>();
 builder.Services.AddSingleton<Config>();
 
 var app = builder.Build();

@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CMH.Process;
 using CMH.Process.Service;
+using CMH.Common.Util;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process
@@ -37,6 +38,7 @@ namespace CMH.Process
             });
 
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
+            builder.Services.AddSingleton<ICacheManager, CacheManager>();
 
             AwaitInitialization(configuration);
         }

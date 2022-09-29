@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Process.Util;
+using CMH.Common.Util;
 
 namespace CMH.Process.Service
 {
@@ -19,17 +20,21 @@ namespace CMH.Process.Service
     public class RepositoryService : IRepositoryService
     {
         private readonly HttpClient _httpClient;
+        private readonly ICacheManager _cacheManager;
 
-        public RepositoryService(IHttpClientFactory httpClientFactory)
+        public RepositoryService(IHttpClientFactory httpClientFactory, ICacheManager cacheManager)
         {
             _httpClient = httpClientFactory.CreateClient("RepositoryService");
+            _cacheManager = cacheManager;
         }
 
         public async Task<DataSource> GetDataSourceAsync(short dataSourceId)
         {
-            if(Cache.DataSource.ContainsKey(dataSourceId))
+            var cacheKey = $"GetDataSourceAsync({dataSourceId})";
+            var dataSource = _cacheManager.Get<DataSource>(cacheKey);
+            if (dataSource != null)
             {
-                return Cache.DataSource[dataSourceId];
+                return dataSource;
             } 
             else
             {
@@ -37,14 +42,8 @@ namespace CMH.Process.Service
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();
-                    var dataSource = JsonConvert.DeserializeObject<DataSource>(content);
-                    lock(Cache.DataSource)
-                    {
-                        if (dataSource != null && Cache.DataSource.ContainsKey(dataSourceId) == false)
-                        {
-                            Cache.DataSource[dataSourceId] = dataSource;
-                        }
-                    }
+                    dataSource = JsonConvert.DeserializeObject<DataSource>(content);
+                    _cacheManager.Set(cacheKey, dataSource);
                     return dataSource;
                 }
             }
@@ -54,9 +53,11 @@ namespace CMH.Process.Service
 
         public async Task<ProcessChannelPolicy> GetProcessChannelPolicyAsync(ProcessChannel processChannel)
         {
-            if (Cache.ProcessChannelPolicy.ContainsKey(processChannel))
+            var cacheKey = $"GetProcessChannelPolicyAsync({processChannel})";
+            var processChannelPolicy = _cacheManager.Get<ProcessChannelPolicy>(cacheKey);
+            if (processChannelPolicy != null)
             {
-                return Cache.ProcessChannelPolicy[processChannel];
+                return processChannelPolicy;
             }
             else
             {
@@ -64,14 +65,8 @@ namespace CMH.Process.Service
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();
-                    var processChannelPolicy = JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
-                    lock(Cache.ProcessChannelPolicy)
-                    {
-                        if (processChannelPolicy != null && Cache.ProcessChannelPolicy.ContainsKey(processChannel) == false)
-                        {
-                            Cache.ProcessChannelPolicy[processChannel] = processChannelPolicy;
-                        }
-                    }
+                    processChannelPolicy = JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
+                    _cacheManager.Set(cacheKey, processChannelPolicy);
                     return processChannelPolicy;
                 }
             }
@@ -81,8 +76,7 @@ namespace CMH.Process.Service
 
         public void ResetCache()
         {
-            Cache.DataSource = new();
-            Cache.ProcessChannelPolicy = new();
+            _cacheManager.Clear();
         }
     }
 }

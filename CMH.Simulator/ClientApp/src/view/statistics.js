@@ -17,7 +17,7 @@ const Statistics = () => {
         setTimeout(() => {
             updateStatistics();
             refreshStatistics();
-        }, 1000);
+        }, 2000);
     }, []);
 
     useEffect(() => {
