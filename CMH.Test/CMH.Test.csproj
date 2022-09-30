@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <Folder Include="Helper\" />
+    <Folder Include="Process\" />
   </ItemGroup>
 
 </Project>

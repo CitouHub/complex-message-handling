@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
-using CMH.Common.Util;
 
 namespace CMH.Priority.Controller
 {
@@ -14,17 +13,14 @@ namespace CMH.Priority.Controller
     public class StatisticsController : ControllerBase
     {
         private readonly HttpClient _functionHttpClient;
-        private readonly ICacheManager _cacheManager;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
 
         public StatisticsController(IHttpClientFactory httpClientFactory,
-            ICacheManager cacheManager,
             IMessageStatisticsRepository messageStatisticsRepository,
             IRuntimeStatisticsRepository runtimeStatisticsRepository)
         {
             _functionHttpClient = httpClientFactory.CreateClient("Function");
-            _cacheManager = cacheManager;
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
         }
@@ -47,7 +43,6 @@ namespace CMH.Priority.Controller
         [Route("messages/process")]
         public async Task<Dictionary<ProcessChannel, MessageStatistics>> GetProcessMessagesStatistics()
         {
-            var cacheKey = "GetProcessMessagesStatistics";
             Dictionary<ProcessChannel, MessageStatistics>? messageStatistics = null;
             try
             {
@@ -57,13 +52,9 @@ namespace CMH.Priority.Controller
                 {
                     var content = await result.Content.ReadAsStringAsync();
                     messageStatistics = JsonConvert.DeserializeObject<Dictionary<ProcessChannel, MessageStatistics>>(content);
-                    _cacheManager.Set(cacheKey, messageStatistics);
                 }
             } 
-            catch
-            {
-                messageStatistics = _cacheManager.Get<Dictionary<ProcessChannel, MessageStatistics>>(cacheKey);
-            }
+            catch { }
 
             return messageStatistics ?? new Dictionary<ProcessChannel, MessageStatistics>();
         }

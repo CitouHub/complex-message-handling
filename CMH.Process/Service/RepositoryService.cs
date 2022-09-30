@@ -1,12 +1,12 @@
 ﻿using System.Net.Http;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
 
 using CMH.Common.Variable;
 using CMH.Data.Model;
-using CMH.Process.Util;
-using CMH.Common.Util;
 
 namespace CMH.Process.Service
 {
@@ -20,21 +20,23 @@ namespace CMH.Process.Service
     public class RepositoryService : IRepositoryService
     {
         private readonly HttpClient _httpClient;
-        private readonly ICacheManager _cacheManager;
+        private readonly IMemoryCache _memoryCache;
 
-        public RepositoryService(IHttpClientFactory httpClientFactory, ICacheManager cacheManager)
+        private readonly string GetDataSourceAsync_CacheKey = "GetDataSourceAsync";
+        private readonly string GetProcessChannelPolicyAsync_CacheKey = "GetProcessChannelPolicyAsync";
+
+        public RepositoryService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
         {
             _httpClient = httpClientFactory.CreateClient("RepositoryService");
-            _cacheManager = cacheManager;
+            _memoryCache = memoryCache;
         }
 
         public async Task<DataSource> GetDataSourceAsync(short dataSourceId)
         {
-            var cacheKey = $"GetDataSourceAsync({dataSourceId})";
-            var dataSource = _cacheManager.Get<DataSource>(cacheKey);
-            if (dataSource != null)
+            var dataSources = _memoryCache.Get<Dictionary<short, DataSource>>(GetDataSourceAsync_CacheKey);
+            if (dataSources != null && dataSources.ContainsKey(dataSourceId))
             {
-                return dataSource;
+                return dataSources[dataSourceId];
             } 
             else
             {
@@ -42,8 +44,15 @@ namespace CMH.Process.Service
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();
-                    dataSource = JsonConvert.DeserializeObject<DataSource>(content);
-                    _cacheManager.Set(cacheKey, dataSource);
+                    var dataSource = JsonConvert.DeserializeObject<DataSource>(content);
+                    lock (_memoryCache)
+                    {
+                        dataSources = _memoryCache.Get<Dictionary<short, DataSource>>(GetDataSourceAsync_CacheKey);
+                        dataSources ??= new Dictionary<short, DataSource>();
+                        dataSources[dataSourceId] = dataSource;
+                        _memoryCache.Set(GetDataSourceAsync_CacheKey, dataSources);
+                    }
+
                     return dataSource;
                 }
             }
@@ -53,11 +62,10 @@ namespace CMH.Process.Service
 
         public async Task<ProcessChannelPolicy> GetProcessChannelPolicyAsync(ProcessChannel processChannel)
         {
-            var cacheKey = $"GetProcessChannelPolicyAsync({processChannel})";
-            var processChannelPolicy = _cacheManager.Get<ProcessChannelPolicy>(cacheKey);
-            if (processChannelPolicy != null)
+            var processChannelPolicies = _memoryCache.Get<Dictionary<ProcessChannel, ProcessChannelPolicy>>(GetProcessChannelPolicyAsync_CacheKey);
+            if (processChannelPolicies != null && processChannelPolicies.ContainsKey(processChannel))
             {
-                return processChannelPolicy;
+                return processChannelPolicies[processChannel];
             }
             else
             {
@@ -65,8 +73,15 @@ namespace CMH.Process.Service
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();
-                    processChannelPolicy = JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
-                    _cacheManager.Set(cacheKey, processChannelPolicy);
+                    var processChannelPolicy = JsonConvert.DeserializeObject<ProcessChannelPolicy>(content);
+                    lock (_memoryCache)
+                    {
+                        processChannelPolicies = _memoryCache.Get<Dictionary<ProcessChannel, ProcessChannelPolicy>>(GetProcessChannelPolicyAsync_CacheKey);
+                        processChannelPolicies ??= new Dictionary<ProcessChannel, ProcessChannelPolicy>();
+                        processChannelPolicies[processChannel] = processChannelPolicy;
+                        _memoryCache.Set(GetProcessChannelPolicyAsync_CacheKey, processChannelPolicies);
+                    }
+
                     return processChannelPolicy;
                 }
             }
@@ -76,7 +91,11 @@ namespace CMH.Process.Service
 
         public void ResetCache()
         {
-            _cacheManager.Clear();
+            lock(_memoryCache)
+            {
+                _memoryCache.Remove(GetDataSourceAsync_CacheKey);
+                _memoryCache.Remove(GetProcessChannelPolicyAsync_CacheKey);
+            }
         }
     }
 }

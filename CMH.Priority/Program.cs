@@ -11,7 +11,6 @@ using CMH.Priority.Util;
 using CMH.Data.Repository;
 using CMH.Data.Model;
 using CMH.Common.Variable;
-using CMH.Common.Util;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +38,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -48,7 +48,6 @@ builder.Services.AddSingleton<IRuntimeStatisticsRepository, RuntimeStatisticsRep
 builder.Services.AddSingleton<IMessageStatisticsRepository, MessageStatisticsRepository>();
 builder.Services.AddSingleton<IDataSourceRepository, DataSourceRepository>();
 builder.Services.AddSingleton<IProcessChannelPolicyRepository, ProcessChannelPolicyRepository>();
-builder.Services.AddSingleton<ICacheManager, CacheManager>();
 builder.Services.AddSingleton<Config>();
 
 var app = builder.Build();

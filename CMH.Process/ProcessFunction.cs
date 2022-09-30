@@ -16,7 +16,6 @@ using CMH.Common.Extenstion;
 using CMH.Process.Extension;
 using CMH.Common.Variable;
 using CMH.Process.Service;
-using CMH.Process.Util;
 
 namespace CMH.Function
 {
@@ -24,11 +23,13 @@ namespace CMH.Function
     {
         private readonly ServiceBusClient _serviceBusClient;
         private readonly IRepositoryService _repositoryService;
+        private readonly IProcessStatisticsService _processStatisticsService;
 
-        public ProcessFunction(ServiceBusClient serviceBusClient, IRepositoryService repositoryService)
+        public ProcessFunction(ServiceBusClient serviceBusClient, IRepositoryService repositoryService, IProcessStatisticsService processStatisticsService)
         {
             _serviceBusClient = serviceBusClient;
             _repositoryService = repositoryService;
+            _processStatisticsService = processStatisticsService;
         }
 
         [FunctionName("ResetProcess")]
@@ -74,7 +75,7 @@ namespace CMH.Function
                 var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
                 var success = await HandleJobMessageAsync(message.Body.ToString());
                 var messageHandleStatus = await HandleResult(success, processChannel, message, log);
-                ProcessStatistics.MessageHandeled(processChannel, messageHandleStatus, (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+                _processStatisticsService.MessageHandeled(processChannel, messageHandleStatus, (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
             } 
             catch(Exception e)
             {

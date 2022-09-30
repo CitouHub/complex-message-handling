@@ -25,6 +25,8 @@ namespace CMH.Process
                 .AddEnvironmentVariables()
                 .Build();
 
+            builder.Services.AddMemoryCache();
+
             builder.Services.AddAzureClients(_ =>
             {
                 _.AddServiceBusClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
@@ -38,7 +40,7 @@ namespace CMH.Process
             });
 
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
-            builder.Services.AddSingleton<ICacheManager, CacheManager>();
+            builder.Services.AddScoped<IProcessStatisticsService, ProcessStatisticsService>();
 
             AwaitInitialization(configuration);
         }
