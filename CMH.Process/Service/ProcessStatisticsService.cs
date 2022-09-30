@@ -14,7 +14,7 @@ namespace CMH.Process.Service
     public interface IProcessStatisticsService
     {
         void AddPendingHandeledProcessMessage(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration);
-        Task<int> FlushPendingHandeledProcessMessages();
+        Task<int> FlushPendingHandeledProcessMessagesAsync();
     }
 
     public class ProcessStatisticsService : IProcessStatisticsService
@@ -48,7 +48,7 @@ namespace CMH.Process.Service
             }
         }
 
-        public async Task<int> FlushPendingHandeledProcessMessages()
+        public async Task<int> FlushPendingHandeledProcessMessagesAsync()
         {
             List<PendingHandledProcessMessage> messagesToFlush = new();
             lock (_memoryCache)
