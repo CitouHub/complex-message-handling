@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 
-using Newtonsoft.Json;
-
 using CMH.Common.Variable;
 using CMH.Data.Model;
 using CMH.Data.Repository;
@@ -12,15 +10,12 @@ namespace CMH.Priority.Controller
     [Route("v1/[controller]")]
     public class StatisticsController : ControllerBase
     {
-        private readonly HttpClient _functionHttpClient;
         private readonly IMessageStatisticsRepository _messageStatisticsRepository;
         private readonly IRuntimeStatisticsRepository _runtimeStatisticsRepository;
 
-        public StatisticsController(IHttpClientFactory httpClientFactory,
-            IMessageStatisticsRepository messageStatisticsRepository,
+        public StatisticsController(IMessageStatisticsRepository messageStatisticsRepository,
             IRuntimeStatisticsRepository runtimeStatisticsRepository)
         {
-            _functionHttpClient = httpClientFactory.CreateClient("Function");
             _messageStatisticsRepository = messageStatisticsRepository;
             _runtimeStatisticsRepository = runtimeStatisticsRepository;
         }

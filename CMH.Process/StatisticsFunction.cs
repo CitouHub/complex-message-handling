@@ -17,7 +17,8 @@ namespace CMH.Process
         [FunctionName("PostStatistics")]
         public void Run([TimerTrigger("*/2 * * * * *")] TimerInfo myTimer, ILogger log)
         {
-            _processStatisticsService.FlushPendingHandeledProcessMessages();
+            var flushed = _processStatisticsService.FlushPendingHandeledProcessMessages();
+            log.LogInformation($"Posted {flushed} new handled messages");
         }
     }
 }
