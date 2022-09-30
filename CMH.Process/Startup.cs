@@ -33,7 +33,7 @@ namespace CMH.Process
                 _.AddServiceBusAdministrationClient(configuration.GetValue<string>("Values:ServiceBusConnection"));
             });
 
-            builder.Services.AddHttpClient("RepositoryService", _ =>
+            builder.Services.AddHttpClient("Service", _ =>
             {
                 _.BaseAddress = new Uri($"{configuration.GetValue<string>("API:BaseUrl")}{configuration.GetValue<string>("API:Version")}/");
                 _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

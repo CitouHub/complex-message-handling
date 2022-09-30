@@ -27,7 +27,7 @@ namespace CMH.Process.Service
 
         public RepositoryService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
         {
-            _httpClient = httpClientFactory.CreateClient("RepositoryService");
+            _httpClient = httpClientFactory.CreateClient("Service");
             _memoryCache = memoryCache;
         }
 

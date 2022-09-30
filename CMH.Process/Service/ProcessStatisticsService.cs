@@ -1,56 +1,66 @@
 ﻿using System.Collections.Generic;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
 
 using CMH.Common.Variable;
 using CMH.Data.Model;
+using System.Text;
 
 namespace CMH.Process.Service
 {
     public interface IProcessStatisticsService
     {
-        Dictionary<ProcessChannel, MessageStatistics> GetProcessChannels();
-        void MessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration);
-        void Reset();
+        void AddPendingHandeledProcessMessage(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration);
+        Task FlushPendingHandeledProcessMessages();
     }
 
     public class ProcessStatisticsService : IProcessStatisticsService
     {
+        private readonly HttpClient _httpClient;
         private readonly IMemoryCache _memoryCache;
-        private readonly string CacheKey = "ProcessChannels";
 
-        public ProcessStatisticsService(IMemoryCache memoryCache)
+        private readonly string CacheKey = "PendingHandeledProcessMessage";
+
+        public ProcessStatisticsService(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache)
         {
+            _httpClient = httpClientFactory.CreateClient("Service");
             _memoryCache = memoryCache;
         }
 
-        public Dictionary<ProcessChannel, MessageStatistics> GetProcessChannels()
-        {
-            var processChannels = _memoryCache.Get<Dictionary<ProcessChannel, MessageStatistics>>(CacheKey);
-            return processChannels ?? new Dictionary<ProcessChannel, MessageStatistics>();
-        }
-
-        public void MessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
-        {
-            lock(_memoryCache)
-            {
-                var processChannels = _memoryCache.Get<Dictionary<ProcessChannel, MessageStatistics>>(CacheKey);
-                processChannels ??= new Dictionary<ProcessChannel, MessageStatistics>();
-
-                if (processChannels.ContainsKey(processChannel) == false)
-                {
-                    processChannels.Add(processChannel, new MessageStatistics());
-                }
-
-                processChannels[processChannel].MessageHandled(messageHandleStatus, duration);
-                _memoryCache.Set(CacheKey, processChannels);
-            }
-        }
-
-        public void Reset()
+        public void AddPendingHandeledProcessMessage(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
         {
             lock (_memoryCache)
             {
-                _memoryCache.Set(CacheKey, new Dictionary<ProcessChannel, MessageStatistics>());
+                var pendingHandledProcessMessages = _memoryCache.Get<List<PendingHandledProcessMessage>>(CacheKey);
+                pendingHandledProcessMessages ??= new();
+
+                pendingHandledProcessMessages.Add(new PendingHandledProcessMessage()
+                {
+                    ProcessChannel = processChannel,
+                    MessageHandleStatus = messageHandleStatus,
+                    Duration = duration
+                });
+
+                _memoryCache.Set(CacheKey, pendingHandledProcessMessages);
+            }
+        }
+
+        public async Task FlushPendingHandeledProcessMessages()
+        {
+            List<PendingHandledProcessMessage> messagesToFlush = new();
+            lock (_memoryCache)
+            {
+                messagesToFlush = _memoryCache.Get<List<PendingHandledProcessMessage>>(CacheKey) ?? new();
+                _memoryCache.Remove(CacheKey);
+            }
+
+            if(messagesToFlush.Count > 0)
+            {
+                var content = new StringContent(JsonConvert.SerializeObject(messagesToFlush), Encoding.UTF8, "application/json");
+                await _httpClient.PostAsync($"statistics/messages/process", content);
             }
         }
     }

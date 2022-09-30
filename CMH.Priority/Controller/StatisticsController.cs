@@ -39,35 +39,31 @@ namespace CMH.Priority.Controller
             _messageStatisticsRepository.ResetPriorityMessagesStatistics();
         }
 
+        [HttpPost]
+        [Route("messages/process")]
+        public void ProcessMessagesHandled([FromBody] List<PendingHandledProcessMessage> pendingHandledProcessMessages)
+        {
+            foreach(var pendingHandledProcessMessage in pendingHandledProcessMessages)
+            {
+                _messageStatisticsRepository.ProcessMessageHandeled(
+                    pendingHandledProcessMessage.ProcessChannel,
+                    pendingHandledProcessMessage.MessageHandleStatus,
+                    pendingHandledProcessMessage.Duration);
+            }
+        }
+
         [HttpGet]
         [Route("messages/process")]
-        public async Task<Dictionary<ProcessChannel, MessageStatistics>> GetProcessMessagesStatistics()
+        public Dictionary<ProcessChannel, MessageStatistics> GetProcessMessagesStatistics()
         {
-            Dictionary<ProcessChannel, MessageStatistics>? messageStatistics = null;
-            try
-            {
-                _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics"));
-                var result = await _functionHttpClient.GetAsync("");
-                if (result.IsSuccessStatusCode)
-                {
-                    var content = await result.Content.ReadAsStringAsync();
-                    messageStatistics = JsonConvert.DeserializeObject<Dictionary<ProcessChannel, MessageStatistics>>(content);
-                }
-            } 
-            catch { }
-
-            return messageStatistics ?? new Dictionary<ProcessChannel, MessageStatistics>();
+            return _messageStatisticsRepository.GetProcessMessagesStatistics();
         }
 
         [HttpPut]
         [Route("messages/process/reset")]
-        public async Task ResetProcessMessagesStatistics()
+        public void ResetProcessMessagesStatistics()
         {
-            try
-            {
-                _functionHttpClient.BaseAddress = new Uri(string.Format(_functionHttpClient.BaseAddress?.ToString() ?? "", "statistics/reset"));
-                await _functionHttpClient.PostAsync("", null);
-            } catch { }
+            _messageStatisticsRepository.ResetProcessMessagesStatistics();
         }
 
         [HttpGet]
