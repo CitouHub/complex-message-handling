@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 
 using CMH.Common.Variable;
 using CMH.Data.Model;
+using CMH.Process.Infrastructure;
 
 namespace CMH.Process.Service
 {
@@ -32,7 +33,7 @@ namespace CMH.Process.Service
 
         public void AddPendingHandeledProcessMessage(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
         {
-            lock (_memoryCache)
+            lock (Signal.PendingHandeledProcessMessageLock)
             {
                 var pendingHandledProcessMessages = _memoryCache.Get<List<PendingHandledProcessMessage>>(CacheKey);
                 pendingHandledProcessMessages ??= new();
@@ -51,7 +52,7 @@ namespace CMH.Process.Service
         public async Task<int> FlushPendingHandeledProcessMessagesAsync()
         {
             List<PendingHandledProcessMessage> messagesToFlush = new();
-            lock (_memoryCache)
+            lock (Signal.PendingHandeledProcessMessageLock)
             {
                 messagesToFlush = _memoryCache.Get<List<PendingHandledProcessMessage>>(CacheKey) ?? new();
                 _memoryCache.Remove(CacheKey);
