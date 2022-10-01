@@ -75,8 +75,7 @@ namespace CMH.Function
                 var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
                 var success = await HandleJobMessageAsync(message.Body.ToString());
                 var messageHandleStatus = await HandleResult(success, processChannel, message, log);
-                _processStatisticsService.AddPendingHandeledProcessMessage(
-                    processChannel, messageHandleStatus, (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds);
+                await _processStatisticsService.QueuePendingHandledProcessMessage(processChannel, messageHandleStatus, executionStart);
             } 
             catch(Exception e)
             {

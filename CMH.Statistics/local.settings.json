@@ -1,0 +1,12 @@
+{
+    "IsEncrypted": false,
+    "Values": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+        "ServiceBusConnection": "Endpoint=sb://sb-cmh-ex.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=HiwhEedagBCXrBspx0Q7Vm3pjrmYizKK+ZAwLCJPwfk="
+    },
+    "API": {
+        "BaseUrl": "https://localhost:7040/",
+        "Version": "v1"
+    }
+}
