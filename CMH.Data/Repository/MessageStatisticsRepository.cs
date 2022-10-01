@@ -1,4 +1,5 @@
 ﻿using CMH.Common.Variable;
+using CMH.Data.Infrastructure;
 using CMH.Data.Model;
 
 namespace CMH.Data.Repository
@@ -36,20 +37,18 @@ namespace CMH.Data.Repository
 
         public void PriorityMessageHandeled(string priorityQueueName, MessageHandleStatus messageHandleStatus, double duration)
         {
-            InitiatePriorityMessagesStatistics(priorityQueueName);
-
-            lock(_priorityMessagesStatistics[priorityQueueName])
+            lock(Signals.MessageStatisticsRepository_PriorityLock)
             {
+                InitiatePriorityMessagesStatistics(priorityQueueName);
                 _priorityMessagesStatistics[priorityQueueName].MessageHandled(messageHandleStatus, duration);
             }
         }
 
         public void ProcessMessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
         {
-            InitiateProcessMessagesStatistics(processChannel);
-
-            lock (_processMessagesStatistics[processChannel])
+            lock(Signals.MessageStatisticsRepository_ProcessLock)
             {
+                InitiateProcessMessagesStatistics(processChannel);
                 _processMessagesStatistics[processChannel].MessageHandled(messageHandleStatus, duration);
             }
         }
@@ -63,7 +62,6 @@ namespace CMH.Data.Repository
         {
             return _processMessagesStatistics;
         }
-
 
         public void ResetPriorityMessagesStatistics()
         {

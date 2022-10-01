@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 using CMH.Process;
 using CMH.Process.Service;
-using CMH.Common.Util;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Process

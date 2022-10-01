@@ -2,6 +2,6 @@
 {
     public static class Signal
     {
-        public static object PendingHandeledProcessMessageLock;
+        public static object PendingHandeledProcessMessageLock = new();
     }
 }
