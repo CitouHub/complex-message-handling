@@ -36,15 +36,12 @@ namespace CMH.Priority.Controller
 
         [HttpPost]
         [Route("messages/process")]
-        public void ProcessMessagesHandled([FromBody] List<PendingHandledProcessMessage> pendingHandledProcessMessages)
+        public void ProcessMessagesHandled([FromBody] PendingHandledProcessMessage pendingHandledProcessMessage)
         {
-            foreach(var pendingHandledProcessMessage in pendingHandledProcessMessages)
-            {
-                _messageStatisticsRepository.ProcessMessageHandeled(
-                    pendingHandledProcessMessage.ProcessChannel,
-                    pendingHandledProcessMessage.MessageHandleStatus,
-                    pendingHandledProcessMessage.Duration);
-            }
+            _messageStatisticsRepository.ProcessMessageHandeled(
+                pendingHandledProcessMessage.ProcessChannel,
+                pendingHandledProcessMessage.MessageHandleStatus,
+                pendingHandledProcessMessage.Duration);
         }
 
         [HttpGet]

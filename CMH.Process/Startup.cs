@@ -39,7 +39,6 @@ namespace CMH.Process
             });
 
             builder.Services.AddScoped<IRepositoryService, RepositoryService>();
-            builder.Services.AddScoped<IProcessStatisticsService, ProcessStatisticsService>();
 
             AwaitInitialization(configuration);
         }

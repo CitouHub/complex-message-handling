@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
 using CMH.Statistics;
-using CMH.Statistics.Service;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Statistics
@@ -35,8 +34,6 @@ namespace CMH.Statistics
                 _.BaseAddress = new Uri($"{configuration.GetValue<string>("API:BaseUrl")}{configuration.GetValue<string>("API:Version")}/");
                 _.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             });
-
-            builder.Services.AddScoped<IProcessStatisticsService, ProcessStatisticsService>();
 
             AwaitInitialization(configuration);
         }

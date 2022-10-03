@@ -16,6 +16,7 @@ using CMH.Common.Extenstion;
 using CMH.Process.Extension;
 using CMH.Common.Variable;
 using CMH.Process.Service;
+using CMH.Data.Model;
 
 namespace CMH.Function
 {
@@ -23,13 +24,11 @@ namespace CMH.Function
     {
         private readonly ServiceBusClient _serviceBusClient;
         private readonly IRepositoryService _repositoryService;
-        private readonly IProcessStatisticsService _processStatisticsService;
 
-        public ProcessFunction(ServiceBusClient serviceBusClient, IRepositoryService repositoryService, IProcessStatisticsService processStatisticsService)
+        public ProcessFunction(ServiceBusClient serviceBusClient, IRepositoryService repositoryService)
         {
             _serviceBusClient = serviceBusClient;
             _repositoryService = repositoryService;
-            _processStatisticsService = processStatisticsService;
         }
 
         [FunctionName("ResetProcess")]
@@ -75,7 +74,7 @@ namespace CMH.Function
                 var processChannel = Enum.Parse<ProcessChannel>(functionName.Split('_')[1]);
                 var success = await HandleJobMessageAsync(message.Body.ToString());
                 var messageHandleStatus = await HandleResult(success, processChannel, message, log);
-                await _processStatisticsService.QueuePendingHandledProcessMessage(processChannel, messageHandleStatus, executionStart);
+                await PostStatistics(processChannel, messageHandleStatus, executionStart);
             } 
             catch(Exception e)
             {
@@ -126,6 +125,19 @@ namespace CMH.Function
             {
                 return MessageHandleStatus.Completed;
             }
+        }
+
+        private async Task PostStatistics(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, DateTimeOffset executionStart)
+        {
+            var sender = _serviceBusClient.CreateSender("handled_process_message");
+            var serviceBusMessage = new ServiceBusMessage(JsonConvert.SerializeObject(
+                new PendingHandledProcessMessage()
+                {
+                    ProcessChannel = processChannel,
+                    MessageHandleStatus = messageHandleStatus,
+                    Duration = (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds
+                }));
+            await sender.SendMessageAsync(serviceBusMessage);
         }
     }
 }

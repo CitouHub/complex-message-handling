@@ -1,4 +1,7 @@
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -6,17 +9,17 @@ using Newtonsoft.Json;
 using Azure.Messaging.ServiceBus;
 
 using CMH.Data.Model;
-using CMH.Statistics.Service;
+using CMH.Common.Variable;
 
 namespace CMH.Statistics
 {
     public class HandledProcessMessagesFunction
     {
-        private readonly IProcessStatisticsService _processStatisticsService;
+        private readonly HttpClient _httpClient;
 
-        public HandledProcessMessagesFunction(IProcessStatisticsService processStatisticsService)
+        public HandledProcessMessagesFunction(IHttpClientFactory httpClientFactory)
         {
-            _processStatisticsService = processStatisticsService;
+            _httpClient = httpClientFactory.CreateClient("Service");
         }
 
         [FunctionName("HandledProcessMessages")]
@@ -24,10 +27,22 @@ namespace CMH.Statistics
             ILogger log, ExecutionContext executionContext)
         {
             var pendingHandledProcessMessage = JsonConvert.DeserializeObject<PendingHandledProcessMessage>(message.Body.ToString());
-            await _processStatisticsService.ProcessMessageHandled(
+            await ProcessMessageHandled(
                 pendingHandledProcessMessage.ProcessChannel,
                 pendingHandledProcessMessage.MessageHandleStatus,
                 pendingHandledProcessMessage.Duration);
+        }
+
+        private async Task ProcessMessageHandled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
+        {
+            var message = new PendingHandledProcessMessage()
+            {
+                ProcessChannel = processChannel,
+                MessageHandleStatus = messageHandleStatus,
+                Duration = duration
+            };
+            var content = new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json");
+            await _httpClient.PostAsync($"statistics/messages/process", content);
         }
     }
 }
