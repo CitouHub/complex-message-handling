@@ -23,7 +23,6 @@
     <Folder Include="Service\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CMH.Common\CMH.Common.csproj" />
     <ProjectReference Include="..\CMH.Data\CMH.Data.csproj" />
   </ItemGroup>
 </Project>

@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 
@@ -8,8 +7,8 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Azure.Messaging.ServiceBus;
 
-using CMH.Data.Model;
 using CMH.Common.Variable;
+using CMH.Data.Model;
 
 namespace CMH.Statistics
 {

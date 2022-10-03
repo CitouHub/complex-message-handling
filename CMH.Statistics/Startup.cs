@@ -43,7 +43,7 @@ namespace CMH.Statistics
             var url = new Uri($"{configuration.GetValue<string>("API:BaseUrl")}{configuration.GetValue<string>("API:Version")}/status/ready");
             var httpClient = new HttpClient();
 
-            while(true)
+            while (true)
             {
                 try
                 {
