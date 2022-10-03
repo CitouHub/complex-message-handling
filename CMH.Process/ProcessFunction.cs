@@ -35,6 +35,7 @@ namespace CMH.Function
         public IActionResult ResetStatistics([HttpTrigger(AuthorizationLevel.Function, "post", Route = "process/reset")] HttpRequest req, ILogger log)
         {
             _repositoryService.ResetCache();
+            log.LogInformation("Process reset");
             return new OkResult();
         }
 
@@ -78,7 +79,7 @@ namespace CMH.Function
             } 
             catch(Exception e)
             {
-                log.LogError($"{e.Message}\n{e.StackTrace}", e);
+                log.LogError($"Unexpected exception {e.Message}\n{e.StackTrace}", e);
                 throw;
             } 
         }
