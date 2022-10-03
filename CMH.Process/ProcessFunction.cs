@@ -136,7 +136,8 @@ namespace CMH.Function
                 {
                     ProcessChannel = processChannel,
                     MessageHandleStatus = messageHandleStatus,
-                    Duration = (DateTimeOffset.UtcNow - executionStart).TotalMilliseconds
+                    StartTime = executionStart,
+                    StopTime = DateTimeOffset.UtcNow
                 }));
             await sender.SendMessageAsync(serviceBusMessage);
         }

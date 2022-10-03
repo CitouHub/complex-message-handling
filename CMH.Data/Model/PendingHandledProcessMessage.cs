@@ -6,6 +6,7 @@ namespace CMH.Data.Model
     {
         public ProcessChannel ProcessChannel { get; set; }
         public MessageHandleStatus MessageHandleStatus { get; set; }
-        public double Duration { get; set; }
+        public DateTimeOffset StartTime { get; set; }
+        public DateTimeOffset StopTime { get; set; }
     }
 }

@@ -6,8 +6,8 @@ namespace CMH.Data.Repository
 {
     public interface IMessageStatisticsRepository
     {
-        void PriorityMessageHandeled(string priorityQueueName, MessageHandleStatus messageHandleStatus, double duration);
-        void ProcessMessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration);
+        void PriorityMessageHandeled(string priorityQueueName, MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime);
+        void ProcessMessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime);
         Dictionary<string, MessageStatistics> GetPriorityMessagesStatistics();
         Dictionary<ProcessChannel, MessageStatistics> GetProcessMessagesStatistics();
         void ResetPriorityMessagesStatistics();
@@ -35,21 +35,21 @@ namespace CMH.Data.Repository
             }
         }
 
-        public void PriorityMessageHandeled(string priorityQueueName, MessageHandleStatus messageHandleStatus, double duration)
+        public void PriorityMessageHandeled(string priorityQueueName, MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime)
         {
             lock(Signals.MessageStatisticsRepository_PriorityLock)
             {
                 InitiatePriorityMessagesStatistics(priorityQueueName);
-                _priorityMessagesStatistics[priorityQueueName].MessageHandled(messageHandleStatus, duration);
+                _priorityMessagesStatistics[priorityQueueName].MessageHandled(messageHandleStatus, startTime, stopTime);
             }
         }
 
-        public void ProcessMessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
+        public void ProcessMessageHandeled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime)
         {
             lock(Signals.MessageStatisticsRepository_ProcessLock)
             {
                 InitiateProcessMessagesStatistics(processChannel);
-                _processMessagesStatistics[processChannel].MessageHandled(messageHandleStatus, duration);
+                _processMessagesStatistics[processChannel].MessageHandled(messageHandleStatus, startTime, stopTime);
             }
         }
 

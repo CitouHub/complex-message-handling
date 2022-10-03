@@ -165,7 +165,7 @@ namespace CMH.Priority.Service
                 var sender = _serviceBusClient.CreateSender(processChannelQueueName);
                 await sender.SendMessagesAsync(messages, cancellationToken);
                 messagesToProcess.ForEach(_ => _messageStatisticsRepository.PriorityMessageHandeled(
-                    priorityQueue, MessageHandleStatus.Completed, (DateTimeOffset.UtcNow - start).TotalMilliseconds));
+                    priorityQueue, MessageHandleStatus.Completed, start, DateTimeOffset.UtcNow));
                 _logger.LogInformation($"Messages forwarded");
 
                 if (messagesToReschedule.Count > 0)
@@ -181,7 +181,7 @@ namespace CMH.Priority.Service
                             _config.BackoffPolicy.ProcessChannelFull.MaxSleepTime);
                         await returnSender.RescheduleMessageAsync(_, DateTimeOffset.UtcNow.AddSeconds(rescheduleTime));
                         _messageStatisticsRepository.PriorityMessageHandeled(
-                            priorityQueue, MessageHandleStatus.Rescheduled, (start - DateTimeOffset.UtcNow).TotalMilliseconds);
+                            priorityQueue, MessageHandleStatus.Rescheduled, start, DateTimeOffset.UtcNow);
                     });
                     _logger.LogInformation($"Messages reschduled");
                 }

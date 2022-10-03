@@ -41,7 +41,8 @@ namespace CMH.Priority.Controller
             _messageStatisticsRepository.ProcessMessageHandeled(
                 pendingHandledProcessMessage.ProcessChannel,
                 pendingHandledProcessMessage.MessageHandleStatus,
-                pendingHandledProcessMessage.Duration);
+                pendingHandledProcessMessage.StartTime,
+                pendingHandledProcessMessage.StopTime);
         }
 
         [HttpGet]

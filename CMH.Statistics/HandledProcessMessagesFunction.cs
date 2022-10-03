@@ -9,6 +9,7 @@ using Azure.Messaging.ServiceBus;
 
 using CMH.Common.Variable;
 using CMH.Data.Model;
+using System;
 
 namespace CMH.Statistics
 {
@@ -29,16 +30,18 @@ namespace CMH.Statistics
             await ProcessMessageHandled(
                 pendingHandledProcessMessage.ProcessChannel,
                 pendingHandledProcessMessage.MessageHandleStatus,
-                pendingHandledProcessMessage.Duration);
+                pendingHandledProcessMessage.StartTime,
+                pendingHandledProcessMessage.StopTime);
         }
 
-        private async Task ProcessMessageHandled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, double duration)
+        private async Task ProcessMessageHandled(ProcessChannel processChannel, MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime)
         {
             var message = new PendingHandledProcessMessage()
             {
                 ProcessChannel = processChannel,
                 MessageHandleStatus = messageHandleStatus,
-                Duration = duration
+                StartTime = startTime,
+                StopTime = stopTime
             };
             var content = new StringContent(JsonConvert.SerializeObject(message), Encoding.UTF8, "application/json");
             await _httpClient.PostAsync($"statistics/messages/process", content);

@@ -8,17 +8,18 @@ namespace CMH.Data.Model
         public int TotalMessagesRescheduled { get; set; }
         public int TotalMessagesDiscarded { get; set; }
         public double TotalMessageDuration { get; set; }
-        public DateTime? FirstMessage { get; set; }
-        public DateTime? LastMessage { get; set; }
+        public DateTimeOffset? FirstMessage { get; set; }
+        public DateTimeOffset? LastMessage { get; set; }
 
-        public void MessageHandled(MessageHandleStatus messageHandleStatus, double duration)
+        public void MessageHandled(MessageHandleStatus messageHandleStatus, DateTimeOffset startTime, DateTimeOffset stopTime)
         {
+            var duration = (stopTime - startTime).TotalMilliseconds;
             TotalMessagesCompleted += (messageHandleStatus == MessageHandleStatus.Completed ? 1 : 0);
             TotalMessagesRescheduled += (messageHandleStatus == MessageHandleStatus.Rescheduled ? 1 : 0);
             TotalMessagesDiscarded += (messageHandleStatus == MessageHandleStatus.Discarded ? 1 : 0);
             TotalMessageDuration += (duration < 0 ? 0 : duration);
-            FirstMessage = FirstMessage == null ? DateTime.UtcNow : FirstMessage;
-            LastMessage = DateTime.UtcNow;
+            FirstMessage = FirstMessage == null ? startTime : FirstMessage;
+            LastMessage = stopTime;
         }
         
         public int TotalMessagesHandled

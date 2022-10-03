@@ -1,5 +1,6 @@
 using CMH.Common.Variable;
 using CMH.Data.Model;
+using System;
 using Xunit;
 
 namespace CMH.Test.Model
@@ -15,18 +16,19 @@ namespace CMH.Test.Model
         public void TotalMessagesHandled(int messagesCompleted, int messagesRescheduled, int messagesDiscarded, int expectedTotalMessagesHandled)
         {
             //Act
+            var timeNow = DateTimeOffset.UtcNow;
             var messageStatistics = new MessageStatistics();
             for(var i = 0; i < messagesCompleted; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Completed, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Completed, timeNow, timeNow);
             }
             for (var i = 0; i < messagesRescheduled; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, timeNow, timeNow);
             }
             for (var i = 0; i < messagesDiscarded; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, timeNow, timeNow);
             }
 
             //Assert
@@ -49,18 +51,19 @@ namespace CMH.Test.Model
             double expectedAvgMessageHandleDuration)
         {
             //Act
+            var timeNow = DateTimeOffset.UtcNow;
             var messageStatistics = new MessageStatistics();
             for (var i = 0; i < messagesCompleted; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Completed, messagesCompletedDuration);
+                messageStatistics.MessageHandled(MessageHandleStatus.Completed, timeNow, timeNow.AddMilliseconds(messagesCompletedDuration));
             }
             for (var i = 0; i < messagesRescheduled; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, messagesRescheduledDuration);
+                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, timeNow, timeNow.AddMilliseconds(messagesRescheduledDuration));
             }
             for (var i = 0; i < messagesDiscarded; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, messagesDiscardedDuration);
+                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, timeNow, timeNow.AddMilliseconds(messagesDiscardedDuration));
             }
 
             //Assert
@@ -81,17 +84,18 @@ namespace CMH.Test.Model
         {
             //Act
             var messageStatistics = new MessageStatistics();
+            var timeNow = DateTimeOffset.UtcNow;
             for (var i = 0; i < messagesCompleted; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Completed, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Completed, timeNow, timeNow);
             }
             for (var i = 0; i < messagesRescheduled; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Rescheduled, timeNow, timeNow);
             }
             for (var i = 0; i < messagesDiscarded; i++)
             {
-                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, 0);
+                messageStatistics.MessageHandled(MessageHandleStatus.Discarded, timeNow, timeNow);
             }
 
             //Assert
