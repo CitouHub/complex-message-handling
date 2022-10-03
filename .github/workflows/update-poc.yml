@@ -3,7 +3,7 @@ name: Update CMH POC
 env:
   SERVICE_PROJECT_NAME: CMH.Priority
   PROCESS_PROJECT_NAME: CMH.Process
-  Statistics_PROJECT_NAME: CMH.Statistics
+  STATISTICS_PROJECT_NAME: CMH.Statistics
   SIMULATOR_PROJECT_NAME: CMH.Simulator
   SERVICE_NAME: as-cmh-service
   PROCESS_NAME: af-cmh-process
