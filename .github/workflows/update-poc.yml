@@ -213,7 +213,7 @@ jobs:
     name: Deploy Statistics
     environment:
       name: 'Production'
-      url: ${{ steps.deploy-process.outputs.webapp-url }}
+      url: ${{ steps.deploy-statistics.outputs.webapp-url }}
 
     steps:
       - name: Download ${{env.STATISTICS_PROJECT_NAME}}
