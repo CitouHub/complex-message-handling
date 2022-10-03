@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Azure.Messaging.ServiceBus;
 
 using CMH.Data.Model;
-using CMH.Process.Service;
+using CMH.Statistics.Service;
 
 namespace CMH.Statistics
 {

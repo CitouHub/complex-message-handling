@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using CMH.Common.Variable;
 using CMH.Data.Model;
 
-namespace CMH.Process.Service
+namespace CMH.Statistics.Service
 {
     public interface IProcessStatisticsService
     {

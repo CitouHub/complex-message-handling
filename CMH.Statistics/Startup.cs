@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
 using CMH.Statistics;
-using CMH.Process.Service;
+using CMH.Statistics.Service;
 
 [assembly: FunctionsStartup(typeof(Startup))]
 namespace CMH.Statistics
